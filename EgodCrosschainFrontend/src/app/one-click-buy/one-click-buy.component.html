@@ -1,0 +1,142 @@
+<span *ngIf="bscContract.connectedAccountAddress" class="address">Connected: {{shortAddress(bscContract.connectedAccountAddress)}}</span>
+
+<div class="container">
+    <div class="box">
+
+        <!-- <div style="display: flex; align-items: center; width: 100%; justify-content: center; height: 3rem; gap: 40px">
+            <img src="../../assets/bsc.svg" style="height: 120%">
+            <h1 class="glow">BIFRÖST</h1>
+            <img src="../../assets/dogechain.png" style="height: 100%">
+        </div>
+        <br> -->
+        <div class="fack">
+            <h3 class="glow">Buy $SAVIOR on DogeChain</h3>
+            <h3 class="glow" style="text-align: right">With BNB from BSC</h3>
+            <h3 class="glow" style="text-align: center">Wow such technology!*</h3>
+        </div>
+
+        <div *ngIf="currentStep == 'CONNECT_WALLET'">
+            <button class="buy" (click)="connectWallet()">Connect Wallet</button>
+        </div>
+
+        <div class="buy-container">
+            <div class="activity-container">
+                <div class="beam" [hidden]="!ShowZoomer">
+                </div>
+                <div #bsc class="chain-activity">
+                    <img class="icon" src="../../assets/bsc.svg" style="height: 100%; transform: scale(1.3);">
+                    <div class="anim-container" [hidden]="!ShowBSCActivity">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <div style="flex: 1 1 auto; width: 100%"></div>
+
+                <div #bsc class="chain-activity">
+                    <img src="../../assets/dogechain.png" style="height: 100%; transform: scale(1.1);">
+                    <div class="anim-container" [hidden]="!ShowDogechainActivity">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-container" *ngIf="currentStep == 'BUY'" [class.disabled]="WaitingForBSCTx">
+                <div class="input-group">
+                    <small>BNB to spend</small>
+                    <input inputmode="decimal" title="Token Amount" autocomplete="off" autocorrect="off" type="text" pattern="^[0-9]*[.,]?[0-9]*$" minlength="1" maxlength="79" spellcheck="false" (keyup)="updateQuote()" #amountBNB [value]="amountInBNB" [class.invalid]="!validAmount">
+                    <span class="busd-text">BNB</span>
+                </div>
+                <span *ngIf="!validAmount" class="input-error">Must be at least 0.1 BNB</span>
+                <!-- <div class="savior-amount glow">= {{amountOutSavior.toString() | number}} $SAVIOR</div> -->
+                <button class="buy" (click)="buy()" [disabled]="!validAmount" *ngIf="!WaitingForBSCTx">Buy</button>
+                <button class="buy" [disabled]="true" *ngIf="WaitingForBSCTx">Waiting...</button>
+            </div>
+
+            <div class=" step-container " *ngIf="currentStep=='CONNECT_DOGECHAIN' ">
+                <h2 class="glow " style="margin-bottom:1rem ">Join us.</h2>
+                <div>
+                    While you wait, let's sort out your metamask for Dogechain.
+                </div>
+                <br>
+                <div class="connect-stages ">
+                    <div [class.current]="!joinDogechain.joinedDogechain ">
+                        1. Connect your Metamask to DogeChain
+                    </div>
+                    <div [class.current]="joinDogechain.joinedDogechain && !joinDogechain.addedSavior ">
+                        2. Add $SAVIOR to Metamask
+                    </div>
+                </div>
+                <br>
+                <div style="display: flex; width: 100%; justify-content: end; ">
+                    <button class="skip-connect " (click)="skipConnect() ">Skip</button>
+                </div>
+            </div>
+
+            <div class="step-container " *ngIf="currentStep=='WAIT_FOR_ORACLE' ">
+                <h2 class="glow " style="margin-bottom:1rem ">AAAAA I'M ASCENDING</h2>
+                <div *ngIf="!error ">
+                    This should only take a minute.
+                </div>
+                <div *ngIf="error ">
+                    <h1 style="color: red ">OH FFFFUUUUUU</h1>
+                    <div>
+                        Somethings gone wrong. Your funds are safe, just come let us know on <a href="https://t.me/egodthesavior " target="_blank ">Telegram</a>.
+                    </div>
+                    <small style="font-family: monospace; color: orangered ">{{error}}</small>
+                </div>
+            </div>
+
+            <div class="step-container " *ngIf="currentStep=='FINISHED' ">
+                <h2 class="glow " style="margin-bottom:1rem ">Finished!</h2>
+                <div>
+                    You have successfully bought $SAVIOR on DogeChain with BNB from BSC!
+                </div>
+            </div>
+        </div>
+
+        <div class="info-container check-tx-prompt" *ngIf="currentStep=='BUY'">
+            <div>
+                Check BSC transaction status
+            </div>
+            <div style="width:100%; display:flex; flex-direction:row; ">
+                <input #checkTxHash placeholder="BSC transaction hash (0x...)">
+                <button (click)="checkTransaction(checkTxHash.value)">
+                check
+            </button>
+            </div>
+        </div>
+
+
+        <div class="info-container " *ngIf="ShowZoomer || buyTransactionHash || oracleTransactionHash ">
+            <div style="width:100%; display:flex; flex-direction:column; ">
+                <div>
+                    EGOD TUNNEL INFO
+                </div>
+                <div *ngIf="!buyTransactionHash ">
+                    BSC: Waiting for transaction
+                </div>
+                <div *ngIf="buyTransactionHash ">
+                    BSC: <a href="https://bscscan.com/tx/{{buyTransactionHash}} " target="_blank ">View transaction</a>
+                </div>
+                <!-- <div *ngIf="WaitingForOracle ">
+                    Oracle: Fetching status...
+                </div> -->
+                <div *ngIf="oracleTransactionHash ">
+                    Dogechain: <a href="https://dogechain.info/tx/{{oracleTransactionHash}} " target="_blank ">View transaction</a>
+                </div>
+            </div>
+        </div>
+
+
+        <br><br>
+        <small>*note - this is not utility</small>
+
+    </div>
+
+
+</div>
+
+<div class="footer ">
+    <span>BSC contract: <a href="https://bscscan.com/address/{{EgodXCSenderAddress}} " target="_blank ">{{shortAddress(EgodXCSenderAddress)}}</a></span>
+    <span>DogeChain contract: <a href="https://explorer.dogechain.dog/address/{{EgodXCRecieverAddress}} ">{{shortAddress(EgodXCRecieverAddress)}}</a></span>
+</div>
