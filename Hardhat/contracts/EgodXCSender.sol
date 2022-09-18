@@ -25,6 +25,8 @@ contract EgodXCSender is Ownable {
 
     mapping(address => DCRecieverData) public recieversByDCTokenAddress;
     address[] public recievers;
+    mapping(address => uint256) public feeByDCTokenAddressBase1000;
+    bool public feeEnabled;
 
     receive() external payable {}
     fallback() external payable {}
@@ -61,6 +63,14 @@ contract EgodXCSender is Ownable {
         return recievers;
     }
 
+    function setFeeEnabled(bool newFeeEnabled) public onlyOwner {
+        feeEnabled = newFeeEnabled;
+    }
+
+    function setFeeForDCTokenAddress(address DCTokenAddress, uint256 feeBase1000) public onlyOwner {
+        feeByDCTokenAddressBase1000[DCTokenAddress] = feeBase1000;
+    }
+
     event egodCrossChainBuy(address indexed buyer, address indexed DCTokenAddress, uint256 amountDoge);
 
     function doOneClickBuy(address DCTokenAddress) public payable {
@@ -72,9 +82,13 @@ contract EgodXCSender is Ownable {
         bnb_to_doge[0] = BNB;
         bnb_to_doge[1] = BSC_DOGE;
 
-        uint balance_before = doge.balanceOf(address(this));
+        uint256 bnbPostFee = msg.value;
+        if (feeEnabled) {
+            bnbPostFee = bnbPostFee * (1000 - feeByDCTokenAddressBase1000[DCTokenAddress]) / 1000;
+        }
 
-        pancakeswap.swapExactETHForTokens{value:msg.value}(
+        uint balance_before = doge.balanceOf(address(this));
+        pancakeswap.swapExactETHForTokens{value:bnbPostFee}(
             0,
             bnb_to_doge,
             address(this),
