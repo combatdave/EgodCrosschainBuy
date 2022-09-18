@@ -1,0 +1,5 @@
+dist/
+node_modules/
+tracked-transactions.json
+completed-transactions.json
+.env

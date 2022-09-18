@@ -1,0 +1,30 @@
+{
+    "name": "egod-crosschain-buy",
+    "version": "1.0.0",
+    "description": "",
+    "main": "./dist/app.js",
+    "scripts": {
+        "local": "tsc && node dist/app.js",
+        "start": "node dist/app.js",
+        "postinstall": "npm run tsc",
+        "tsc": "tsc"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/node": "^18.7.16",
+        "typescript": "^4.8.3"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "dotenv": "^16.0.2",
+        "ethers": "^5.7.0",
+        "express": "^4.18.1",
+        "node-fetch": "^3.2.10",
+        "rxjs": "^7.5.6"
+    },
+    "engines": {
+        "node": "16.13.1"
+    }
+}

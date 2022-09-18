@@ -1,0 +1,365 @@
+:host {
+    font-family: "Comic Neue", cursive;
+    min-height: 600px;
+    height: 100%;
+    max-height: 100vh;
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.address {
+    position: fixed;
+    right: 10px;
+}
+
+.container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+}
+
+.glow {
+    font-family: 'Comic Neue', cursive;
+    text-shadow: 0px 0px 10px yellow;
+    font-weight: bold;
+}
+
+.box {
+    background: #5f457b;
+    border: 1px solid white;
+    box-shadow: 0px 0px 100px yellow;
+    z-index: 100;
+    border-radius: 40px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 400px;
+    min-width: 200px;
+    width: 85%;
+}
+
+.buy-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+}
+
+.step-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: rgb(58, 47, 81);
+    padding: 10px;
+    padding-top: 2.5rem;
+    padding-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    align-items: center;
+    border: 1px solid #ffff92;
+    width: 100%;
+    &.disabled {
+        opacity: 0.5;
+    }
+}
+
+.input-group {
+    border: 1px solid #ffffff44;
+    padding: 10px;
+    border-radius: 60px;
+    position: relative;
+    small {
+        position: absolute;
+        top: -0.5rem;
+        left: 1.5rem;
+        background: rgb(58, 47, 81);
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+}
+
+input {
+    color: rgb(255, 255, 255);
+    // width: 100%;
+    position: relative;
+    font-weight: 500;
+    outline: none;
+    border-top: none;
+    border-right: none;
+    border-left: none;
+    border-image: initial;
+    flex: 1 1 auto;
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0px;
+    appearance: textfield;
+    height: 70px;
+    background: none;
+    border-bottom: 0.0625rem solid rgb(92, 103, 125);
+    text-align: right;
+    margin-right: 10px;
+    height: 25px;
+    // &.invalid {
+    //     color: red;
+    // }
+}
+
+.input-error {
+    text-align: right;
+    color: red;
+}
+
+::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: #ffffff;
+    opacity: 0.5;
+    /* Firefox */
+}
+
+.busd-text {
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.savior-amount {
+    margin-top: 10px;
+    font-weight: 500;
+    font-size: 20px;
+    text-align: right;
+}
+
+button.buy {
+    font-family: "Comic Neue", cursive;
+    background: #fdff83;
+    border-radius: 28px;
+    text-shadow: none;
+    color: #577788;
+    font-size: 30px;
+    border: 1px solid white;
+    box-shadow: 0px 0px 20px yellow;
+    font-weight: bold;
+    margin: 10px;
+    cursor: pointer;
+    &:hover {
+        background: #feffb0;
+        text-decoration: none;
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.in-progress {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0px;
+}
+
+.fack {
+    width: 100%;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    background: #202020;
+    * {
+        flex: 1 1 auto;
+    }
+}
+
+a {
+    color: white;
+    text-shadow: 0px 0px 5px yellow;
+    font-weight: bold;
+    &:hover {
+        text-shadow: 0px 0px 10px yellow;
+    }
+}
+
+.activity-container {
+    display: flex;
+    align-items: center;
+    width: 80%;
+    justify-content: center;
+    height: 3rem;
+    gap: 40px;
+    position: absolute;
+    // top: -1.5rem;
+    .beam {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(255, 255, 0, 0) 0%, rgba(255, 255, 0, 1) 50%, rgba(0, 0, 0, 0) 100%);
+        animation: beamzoom 1s linear infinite;
+    }
+}
+
+@keyframes beamzoom {
+    0% {
+        left: 0;
+        width: 0%;
+    }
+    25% {
+        left: 0%;
+        width: 50%;
+    }
+    75% {
+        left: 50%;
+        width: 50%;
+    }
+    100% {
+        width: 0%;
+        left: 100%;
+    }
+}
+
+.chain-activity {
+    height: 100%;
+    position: relative;
+    z-index: 10;
+}
+
+.anim-container {
+    .spinner {
+        $loader-width: 2px;
+        border: $loader-width solid transparent;
+        border-top: $loader-width solid #fffc96;
+        margin: -$loader-width;
+        border-radius: 100%;
+        animation: spin 3s linear infinite, glow 3s ease-in-out infinite;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+    }
+}
+
+@keyframes fadeout {
+    0% {
+        opacity: 1;
+        visibility: hidden;
+    }
+    100% {
+        opacity: 0;
+        visibility: visible;
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes glow {
+    0%,
+    100% {
+        box-shadow: 0px 0px 15px rgba(255, 255, 0, 0.2);
+    }
+    50% {
+        box-shadow: 0px 0px 15px yellow;
+    }
+}
+
+.connect-stages {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    width: 80%;
+    div {
+        opacity: 0.5;
+        text-shadow: 0px 0px 10px yellow;
+        &.current {
+            opacity: 1;
+        }
+    }
+}
+
+button.skip-connect {
+    font-family: "Comic Neue", cursive;
+    background: #407ba5;
+    border-radius: 28px;
+    text-shadow: none;
+    color: #fafdff;
+    font-size: 1rem;
+    border: 1px solid #fffd00;
+    font-weight: bold;
+    margin: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    cursor: pointer;
+    color: yellow;
+    &:hover {
+        background: #628aa8;
+        text-decoration: none;
+    }
+}
+
+.info-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: rgb(58, 47, 81);
+    padding: 10px;
+    border-radius: 10px;
+    align-items: center;
+    border: 1px solid #ffff92;
+    width: 100%;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: small;
+    color: #00d4ff;
+    * a {
+        text-shadow: none;
+        font-weight: normal;
+        color: inherit;
+    }
+}
+
+.check-tx-prompt {
+    align-items: start;
+    * input {
+        font-size: small;
+        font-family: monospace;
+        color: #aaa;
+    }
+    * button {
+        font-family: "Courier New", Courier, monospace !important;
+        font-size: small;
+        color: #1c27b8;
+        background: #ffe000;
+        border: none;
+        border-radius: 10px px;
+        &:disabled {
+            opacity: 0.5;
+        }
+    }
+}
