@@ -1,0 +1,15 @@
+{
+    "name": "Egod Crosschain Buy",
+    "devDependencies": {
+        "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+        "hardhat": "^2.10.1",
+        "hardhat-deploy": "^0.11.12"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^4.7.0",
+        "@uniswap/v2-periphery": "^1.1.0-beta.0",
+        "@uniswap/v3-periphery": "^1.4.1",
+        "dotenv": "^16.0.1",
+        "merkletreejs": "^0.2.32"
+    }
+}
