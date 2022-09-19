@@ -5,12 +5,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { OneClickBuyComponent } from './one-click-buy/one-click-buy.component';
 import { WinRefService } from './win-ref.service';
+import { ErrorMessageRendererComponent } from './error-message-renderer/error-message-renderer.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    OneClickBuyComponent
+    OneClickBuyComponent,
+    ErrorMessageRendererComponent
   ],
   imports: [
     BrowserModule,

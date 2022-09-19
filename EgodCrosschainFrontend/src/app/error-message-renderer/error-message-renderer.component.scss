@@ -1,0 +1,23 @@
+:host {
+    color: red;
+    font-family: 'Courier New', Courier, monospace;
+    position: relative;
+}
+
+h3 {
+    margin: 0px;
+}
+
+.close {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    button {
+        background: red;
+        border: 1px solid red;
+        color: white;
+        border-radius: 50%;
+        font-weight: bold;
+        cursor: pointer;
+    }
+}

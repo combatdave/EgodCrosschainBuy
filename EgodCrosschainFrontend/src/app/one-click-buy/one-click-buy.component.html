@@ -106,7 +106,6 @@
             </div>
         </div>
 
-
         <div class="info-container " *ngIf="ShowZoomer || buyTransactionHash || oracleTransactionHash ">
             <div style="width:100%; display:flex; flex-direction:column; ">
                 <div>
@@ -127,10 +126,11 @@
             </div>
         </div>
 
-
-        <br><br>
-        <small>*note - this is not utility</small>
-
+        <div class="info-container " *ngIf="errorService.message">
+            <div style="width:100%; display:flex; flex-direction:column; ">
+                <app-error-message-renderer></app-error-message-renderer>
+            </div>
+        </div>
     </div>
 
 

@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { BigNumber, ethers } from 'ethers';
 import { fetchJson } from 'ethers/lib/utils';
+import { ErrorMessageService } from '../error-message-renderer/error-message.service';
 import { BSCContractService, EGOD_XCRECIEVER_ADDRESS, EGOD_XCSENDER_ADDRESS } from './services/bsccontract.service';
 import { BSCTransactionFinderService, HistoricalTransaction } from './services/bsctransaction-finder.service';
 import { JoinDogechainService } from './services/join-dogechain.service';
@@ -36,7 +37,8 @@ export class OneClickBuyComponent implements OnInit {
     public transactionFinder: BSCTransactionFinderService,
     private cdr: ChangeDetectorRef,
     public joinDogechain: JoinDogechainService,
-    public oracle: OracleService) { }
+    public oracle: OracleService,
+    public errorService: ErrorMessageService) { }
 
   async ngOnInit() {
     if (this.bscContract.connectedAccountAddress) {
@@ -101,7 +103,8 @@ export class OneClickBuyComponent implements OnInit {
     this.ShowBSCActivity = true;
     try {
       this.buyTransactionHash = await this.bscContract.doOneClickBuy(this.amountInBNB, false);
-    } catch {
+    } catch (e: any) {
+      this.errorService.SetMessage(`Error buying: ${e.data.message}`);
       this.ShowBSCActivity = false;
     }
 
