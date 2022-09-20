@@ -79,6 +79,8 @@ export class OneClickBuyComponent implements OnInit {
   public async connectWallet() {
     await this.bscContract.connect();
     this.activateStep("BUY");
+
+    this.updateTransmuterEnabled();
   }
 
   public async connectDogechain() {
@@ -176,5 +178,11 @@ export class OneClickBuyComponent implements OnInit {
 
   public skipConnect() {
     this.activateStep("WAIT_FOR_ORACLE");
+  }
+
+  public isTransmuterEnabled: boolean = false;
+  
+  public async updateTransmuterEnabled() {
+    this.isTransmuterEnabled = await this.bscContract.checkEnabled();
   }
 }

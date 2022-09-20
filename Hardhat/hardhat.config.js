@@ -6,6 +6,7 @@ require('@nomicfoundation/hardhat-toolbox');
 
 require("./tasks/unrug");
 require("./tasks/rescuewdoge");
+require("./tasks/setactive");
 
 /**
  * @type import('hardhat/config').HardhatUserConfig

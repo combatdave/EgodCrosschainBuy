@@ -1,14 +1,12 @@
 <span *ngIf="bscContract.connectedAccountAddress" class="address">Connected: {{shortAddress(bscContract.connectedAccountAddress)}}</span>
 
 <div class="container">
-    <div class="box">
+    <div class="box" *ngIf="!isTransmuterEnabled">
+        <h3>Transmuter is disabled</h3>
+        <div class="description">The transmuter is temporarily disabled. Please try again later.</div>
+    </div>
 
-        <!-- <div style="display: flex; align-items: center; width: 100%; justify-content: center; height: 3rem; gap: 40px">
-            <img src="../../assets/bsc.svg" style="height: 120%">
-            <h1 class="glow">BIFRÖST</h1>
-            <img src="../../assets/dogechain.png" style="height: 100%">
-        </div>
-        <br> -->
+    <div class="box" *ngIf="isTransmuterEnabled">
         <div class="fack">
             <h3 class="glow">Buy $SAVIOR on DogeChain</h3>
             <h3 class="glow" style="text-align: right">With BNB from BSC</h3>

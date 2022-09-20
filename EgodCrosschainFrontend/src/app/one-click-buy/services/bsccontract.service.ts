@@ -100,6 +100,9 @@ export class BSCContractService {
     this.egodXCSenderContract = await new ethers.Contract(EgodXCSender.address, EgodXCSender.abi, this.provider.getSigner());
   }
 
+  public async checkEnabled() {
+    return await this.egodXCSenderContract.allEnabled();
+  }
 
   public async doOneClickBuy(amountBNB: string, fake: boolean = false): Promise<string | undefined> {
     if (this.txInProgress) return undefined;
