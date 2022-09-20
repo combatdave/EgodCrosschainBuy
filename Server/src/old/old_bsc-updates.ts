@@ -1,6 +1,6 @@
 import { BigNumber, Contract, ethers } from "ethers";
 import { Subject } from "rxjs";
-import { contract_egodXCSender_bsc } from "./connections";
+import { contract_egodXCSender_bsc, provider_bsc } from "../connections";
 
 
 export type EgodCrossChainBuyData = {
@@ -19,18 +19,16 @@ export class BSCEgodXCSenderWatcher {
 
     public onNewCrossChainBuyData: Subject<EgodCrossChainBuyData> = new Subject<EgodCrossChainBuyData>();
 
-    private egodCrossChainBuyTopic: string;
+    private egodCrossChainBuyTopic = contract_egodXCSender_bsc.interface.getEventTopic("egodCrossChainBuy");;
     
-    constructor(public contract_egodXCSender: Contract, public provider: ethers.providers.JsonRpcProvider) {
+    constructor() {
         this.listen();
-
-        this.egodCrossChainBuyTopic = contract_egodXCSender_bsc.interface.getEventTopic("egodCrossChainBuy");
     }
 
     private listen() {
-        this.contract_egodXCSender.on(this.contract_egodXCSender.filters["egodCrossChainBuy(address,address,uint256)"](),
-        async (buyer: string, dcTokenAddress: string, amountIn: BigNumber, event: ethers.Event) => {
-            console.log("egodCrossChainBuy", buyer, dcTokenAddress, amountIn.toString(), event.transactionHash);
+        contract_egodXCSender_bsc.on(contract_egodXCSender_bsc.filters["egodCrossChainBuy(address,address,uint256,uint256)"](),
+        async (buyer: string, dcTokenAddress: string, bridgeId: BigNumber, amountIn: BigNumber, event: ethers.Event) => {
+            console.log("egodCrossChainBuy", buyer, dcTokenAddress, bridgeId.toNumber(), amountIn.toString(), event.transactionHash);
             try {
                 await this.processHash(event.transactionHash);
             } catch (e) {
@@ -42,7 +40,7 @@ export class BSCEgodXCSenderWatcher {
     public async processHash(txhash: string): Promise<boolean> {
         let transaction: ethers.providers.TransactionResponse | undefined;
         try {
-            transaction = await this.provider.getTransaction(txhash);
+            transaction = await provider_bsc.getTransaction(txhash);
         } catch (e) {
             console.log("Error getting transaction for", txhash, "error:", e);
             return false;
@@ -56,7 +54,7 @@ export class BSCEgodXCSenderWatcher {
 
         let egodCrossChainBuyLog: ethers.providers.Log | undefined = reciept.logs.find((e: ethers.providers.Log) => {
             const topic = e.topics[0].toLowerCase() === this.egodCrossChainBuyTopic.toLowerCase();
-            const addr = e.address.toLowerCase() === this.contract_egodXCSender.address.toLowerCase();
+            const addr = e.address.toLowerCase() === contract_egodXCSender_bsc.address.toLowerCase();
             return topic && addr;
         });
         let bridgedogeBscReceivedLog: ethers.providers.Log | undefined = reciept.logs.find((e: ethers.providers.Log) => {
@@ -66,7 +64,7 @@ export class BSCEgodXCSenderWatcher {
         });
 
         if (egodCrossChainBuyLog && bridgedogeBscReceivedLog) {
-            const buyLog = this.contract_egodXCSender.interface.parseLog(egodCrossChainBuyLog);
+            const buyLog = contract_egodXCSender_bsc.interface.parseLog(egodCrossChainBuyLog);
             const buyer = buyLog.args.buyer;
             const dcTokenAddress = buyLog.args.DCTokenAddress;
             const amountSentPreTax = buyLog.args.amountDoge;

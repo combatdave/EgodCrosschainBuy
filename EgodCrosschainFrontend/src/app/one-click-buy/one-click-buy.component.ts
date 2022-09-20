@@ -104,7 +104,11 @@ export class OneClickBuyComponent implements OnInit {
     try {
       this.buyTransactionHash = await this.bscContract.doOneClickBuy(this.amountInBNB, false);
     } catch (e: any) {
-      this.errorService.SetMessage(`Error buying: ${e.data.message}`);
+      if (e.data) {
+        this.errorService.SetMessage(`Error buying: ${e.data.message}`);
+      } else {
+        this.errorService.SetMessage(`Error buying: ${e}`);
+      }
       this.ShowBSCActivity = false;
     }
 

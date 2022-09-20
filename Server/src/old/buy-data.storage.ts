@@ -1,6 +1,17 @@
 import { BigNumber } from "ethers";
 import fs from "fs";
-import { EgodCrossChainBuyData } from "./bsc-updates";
+// import { EgodCrossChainBuyData } from "./oracle";
+
+export type EgodCrossChainBuyData = {
+    hash: string,
+    buyer: string,
+    dcTokenToBuy: string;
+    amountSent: BigNumber,
+    timestamp: Date,
+    recieverContractAddress: string,
+    processing?: boolean,
+    dogechainTxHash?: string
+}
 
 type SerializedBuyData = {
     hash: string;

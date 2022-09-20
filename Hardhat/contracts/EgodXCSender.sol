@@ -71,7 +71,7 @@ contract EgodXCSender is Ownable {
         feeByDCTokenAddressBase1000[DCTokenAddress] = feeBase1000;
     }
 
-    event egodCrossChainBuy(address indexed buyer, address indexed DCTokenAddress, uint256 amountDoge);
+    event egodCrossChainBuy(address indexed buyer, address indexed DCTokenAddress, uint indexed bridgeId, uint256 amountDoge);
 
     function doOneClickBuy(address DCTokenAddress) public payable {
         require(allEnabled, "EgodXCSender: Disabled");
@@ -100,9 +100,12 @@ contract EgodXCSender is Ownable {
         uint amountToSend = balance_after - balance_before;
 
         address dogechainRecieverAddress = recieversByDCTokenAddress[DCTokenAddress].recieverAddress;
-        bridgeDoge.BSCToDC(dogechainRecieverAddress, amountToSend);
 
-        emit egodCrossChainBuy(msg.sender, DCTokenAddress, amountToSend);
+        uint bridgeId = bridgeDoge.currentBridgeId(); // The correct bridge ID is the one before bc ???
+        bridgeDoge.BSCToDC(dogechainRecieverAddress, amountToSend);
+        IBridgeDoge.BridgeTx memory bridgeTx = bridgeDoge.readTransaction(bridgeId);
+        
+        emit egodCrossChainBuy(msg.sender, DCTokenAddress, bridgeId, bridgeTx.amount);
     }
 
     function rescue(address token, uint amount) public onlyOwner {

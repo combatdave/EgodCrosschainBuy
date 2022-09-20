@@ -1,24 +1,24 @@
 import {BigNumber, Contract, ethers} from "ethers";
 import { Subject } from "rxjs";
-import { Oracle } from "./oracle";
+import { Oracle } from "../oracle";
 // import { contract_egodXCReciever_dogechain } from "./connections";
 
-export const DOGEBRIDGE_DC_ADDRESS = "0xB450211dA1FDa2ca2CbB794eB0b18eF7A7c337Fc";
+export const DOGEBRIDGE_DC_ADDRESS = "0x13DC2D5BbE8471406eE82121FC33A4F7DaBe8B88";
 
 // const API_URL = "https://explorer.dogmoney.money";
 const API_URL = "https://explorer.dogechain.dog"; 
 
-export type BridgeDogeInData = {
-    hash: string,
+export type BSCtoDCCallData = {
+    id: number,
     amountRecieved: BigNumber,
     recieverAddr: string;
 }
 
-export class BridgeDogeWatcher {
+export class Bridgedoge_DogeChain {
+    
+    public onBridgedogeBSCtoDCCall: Subject<BSCtoDCCallData> = new Subject<BSCtoDCCallData>();
 
-    public onDogechainBridgeIn: Subject<BridgeDogeInData> = new Subject<BridgeDogeInData>();
-
-    constructor(public oracle: Oracle) {
+    constructor() {
     }
 
     public async watch() {
@@ -48,22 +48,17 @@ export class BridgeDogeWatcher {
         logs.forEach(async (log: any) => {
             let data: string = log.input;
 
-            const BSCtoDC = "0x91b8cdce";
+            const BSCtoDC = "0x12d8294c";
             if (data.toLowerCase().startsWith(BSCtoDC.toLowerCase()))
             {
-                const [amount, requestor] = ethers.utils.defaultAbiCoder.decode(["uint256", "address"], ethers.utils.hexDataSlice(data, 4));
-                
-                // TODO: Need to check if requestor is an EgodXCReciever contract
-                const requestorIsEgodXCReciever = await this.oracle.isReciever(requestor);
-                if (requestorIsEgodXCReciever) {
-                    const bridgeInData: BridgeDogeInData = {
-                        hash: log.hash,
-                        amountRecieved: amount,
-                        recieverAddr: requestor
-                    };
-                    
-                    this.onDogechainBridgeIn.next(bridgeInData);
+                const [amount, requestor, id] = ethers.utils.defaultAbiCoder.decode(["uint256", "address", "uint256"], ethers.utils.hexDataSlice(data, 4));
+
+                const bridgeCompleteData: BSCtoDCCallData = {
+                    id: id.toNumber(),
+                    amountRecieved: amount,
+                    recieverAddr: requestor
                 }
+                this.onBridgedogeBSCtoDCCall.next(bridgeCompleteData);
             }
         });
     }  

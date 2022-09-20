@@ -1,6 +1,5 @@
 import express, { Express, Request, Response } from 'express';
 import cors from "cors";
-import { BSCEgodXCSenderWatcher, EgodCrossChainBuyData } from './bsc-updates';
 import { Logger } from "./logs";
 import { Oracle } from './oracle';
 const path = require('path');
@@ -21,7 +20,7 @@ function getLogsHTML() {
 }
 
 
-export async function StartServer(bscObserver: BSCEgodXCSenderWatcher, oracle: Oracle) {
+export async function StartServer(oracle: Oracle) {
 
     const PORT = process.env.PORT || 5000;
     const app: Express = express();
@@ -47,14 +46,15 @@ export async function StartServer(bscObserver: BSCEgodXCSenderWatcher, oracle: O
             status: "error",
         }
         if (txhash) {
-            let pendingBuy = await oracle.getPendingTxData(txhash);
-            if (pendingBuy) {
-                const processed = await oracle.checkProcessedStatus(pendingBuy);
+            
+            const processed = await oracle.checkProcessedStatus(txhash);
+            if (processed) {
                 d.status = "already processed";
             }
 
+
             try {
-                const startedProcessing = await bscObserver.processHash(txhash);
+                const startedProcessing = await oracle.processHash(txhash);
                 if (startedProcessing) {
                     d.status = "requested processing";
                 } else {
@@ -72,24 +72,17 @@ export async function StartServer(bscObserver: BSCEgodXCSenderWatcher, oracle: O
 
     app.get("/txstatus", async (req: Request, res: Response) => {
         let txhash = req.query.txhash as string;
-        let d = {
+        let d:any = {
             txhash: txhash,
             status: "unknown",
-            data: undefined
         }
 
         if (txhash) {
-            let pendingTxData = await oracle.getPendingTxData(txhash);
-            if (pendingTxData) {
-                d.status = "pending";
-                d.data = pendingTxData
-            } else {
-                const completedTxData = await oracle.getCompletedBuyData(txhash);
-                if (completedTxData) {
-                    d.status = "complete";
-                    d.data = completedTxData;
-                }
-            }
+            const {status, data} = await oracle.getTransactionStatus(txhash);
+            d.status = status;
+            d.data = data;
+        } else {
+            d.status = "missing arg txhash";
         }
         res.json(d);
     });
