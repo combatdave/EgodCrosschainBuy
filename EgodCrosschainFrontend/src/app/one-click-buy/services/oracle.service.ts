@@ -29,11 +29,12 @@ export class OracleService {
     return true;
   }
 
-  public async waitForOracle(bsctx: string): Promise<boolean> {
+  public async waitForOracle(bsctx: string): Promise<string> {
     this.bscTxHash = bsctx;
     this.status = "unknown";
-    await this.waitForCompletionData();
-    return true;
+    const result = await this.waitForCompletionData();
+    console.log(result);
+    return "abc";
   }
 
   private async waitForCompletionData() {

@@ -75,7 +75,12 @@ export async function StartServer(oracle: Oracle) {
         }
 
         if (txhash) {
-            d = await oracle.getTransactionStatus(txhash);
+            try {
+                d = await oracle.getTransactionStatus(txhash);
+            } catch (e) {
+                d.status = "error";
+                d.error = e;
+            }
         } else {
             d.status = "missing arg txhash";
         }

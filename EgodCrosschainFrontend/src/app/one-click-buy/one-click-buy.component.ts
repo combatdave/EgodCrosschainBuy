@@ -90,7 +90,7 @@ export class OneClickBuyComponent implements OnInit {
 
   public async waitForOracle() {
     try {
-      this.oracleTransactionCompleted = await this.oracle.waitForOracle(this.buyTransactionHash!);
+      this.oracleTransactionHash = await this.oracle.waitForOracle(this.buyTransactionHash!);
     } catch (e) {
       console.error("Oracle error:", e);
       this.error = "Oracle error: " + e;
@@ -125,6 +125,7 @@ export class OneClickBuyComponent implements OnInit {
   }
 
   public async checkTransaction(txhash: string) {
+    this.currentStep = "WAIT_FOR_ORACLE";
     if (!this.validate_txhash(txhash)) {
       console.error("Invalid txhash");
       return;
@@ -168,7 +169,7 @@ export class OneClickBuyComponent implements OnInit {
     return this.buyTransactionHash != undefined;
   }
 
-  public oracleTransactionCompleted?: boolean;
+  public oracleTransactionHash?: string;
   public ShowBSCActivity: boolean = false;
   public ShowDogechainActivity: boolean = false;
 
