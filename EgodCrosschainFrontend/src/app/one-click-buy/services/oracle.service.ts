@@ -10,7 +10,7 @@ export class OracleService {
 
   public bscTxHash?: string;
   public status?: string;
-  public completionData?: any;
+  public oracleTxHash?: any;
 
   public onStatusChanged: Subject<void> = new Subject<void>();
 
@@ -29,12 +29,11 @@ export class OracleService {
     return true;
   }
 
-  public async waitForOracle(bsctx: string): Promise<string> {
+  public async waitForOracle(bsctx: string): Promise<string | undefined> {
     this.bscTxHash = bsctx;
     this.status = "unknown";
-    const result = await this.waitForCompletionData();
-    console.log(result);
-    return "abc";
+    await this.waitForCompletionData();
+    return this.oracleTxHash;
   }
 
   private async waitForCompletionData() {
@@ -52,7 +51,7 @@ export class OracleService {
         this.onStatusChanged.next();
       } else if (json.status == "complete") {
         this.status = "complete";
-        this.completionData = json.data;
+        this.oracleTxHash = json.oracleTxHash;
         this.onStatusChanged.next();
         return;
       }

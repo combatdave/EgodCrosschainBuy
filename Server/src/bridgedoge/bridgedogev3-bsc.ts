@@ -39,26 +39,30 @@ export class Bridgedogev3BSCWatcher {
     }
 
     public static async findEgodCrossChainBuyEventFromTx(txhash: string) : Promise<EgodCrossChainBuyEvent | undefined> {
-        const reciept = await provider_bsc.getTransactionReceipt(txhash);
-        
-        const logs = reciept.logs;
+        try {
+            const reciept = await provider_bsc.getTransactionReceipt(txhash);
 
-        for (let i=0; i<logs.length; i++) {
-            const log = logs[i];
-            try {
-                const parsed = contract_egodXCSender_bsc.interface.parseLog(log);
-                if (parsed.name == "egodCrossChainBuy_BridgeDoge") {
-                    const params: EgodCrossChainBuyEvent = {
-                        txhash: log.transactionHash,
-                        buyer: parsed.args.buyer,
-                        DCTokenAddress: parsed.args.DCTokenAddress,
-                        bridgeId: parsed.args.bridgeId.toNumber(),
-                        amountDoge: parsed.args.amountDoge
-                    };
-                    return params;
+            const logs = reciept.logs;
+
+            for (let i=0; i<logs.length; i++) {
+                const log = logs[i];
+                try {
+                    const parsed = contract_egodXCSender_bsc.interface.parseLog(log);
+                    if (parsed.name == "egodCrossChainBuy_BridgeDoge") {
+                        const params: EgodCrossChainBuyEvent = {
+                            txhash: log.transactionHash,
+                            buyer: parsed.args.buyer,
+                            DCTokenAddress: parsed.args.DCTokenAddress,
+                            bridgeId: parsed.args.bridgeId.toNumber(),
+                            amountDoge: parsed.args.amountDoge
+                        };
+                        return params;
+                    }
+                } catch (e) {
                 }
-            } catch (e) {
             }
+        } catch (e) {
+            console.log("Error in findEgodCrossChainBuyEventFromTx for hash", txhash, ":", e);
         }
 
         return undefined;
