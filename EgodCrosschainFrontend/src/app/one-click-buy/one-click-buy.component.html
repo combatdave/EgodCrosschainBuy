@@ -2,12 +2,14 @@
 
 <img src="../../assets/Heaven’s Gate.png" alt="Heaven’s Gate" class="heavens-gate-logo">
 
+<div class="advanced" (click)="advanced()">Advanced</div>
+
 <div class="container">
     <div class="box">
         <div class="fack">
             <h3 class="glow">Buy $SAVIOR on DogeChain</h3>
             <h3 class="glow" style="text-align: right">With BNB from BSC</h3>
-            <h3 class="glow" style="text-align: center">Wow such technology!*</h3>
+            <h3 class="glow" style="text-align: center">Wow such technology!</h3>
         </div>
 
         <div *ngIf="currentStep == 'CONNECT_WALLET'">
@@ -57,7 +59,9 @@
                 </div>
                 <span *ngIf="!validAmount" class="input-error">Must be at least 0.1 BNB</span>
                 <!-- <div class="savior-amount glow">= {{amountOutSavior.toString() | number}} $SAVIOR</div> -->
-                <button class="buy" (click)="buy()" [disabled]="!validAmount" *ngIf="!WaitingForBSCTx">Buy</button>
+                <button class="buy" (click)="buy()" [disabled]="!validAmount" *ngIf="!WaitingForBSCTx">
+                    TRANSMUTE
+                </button>
                 <button class="buy" [disabled]="true" *ngIf="WaitingForBSCTx">Waiting...</button>
             </div>
 
@@ -96,14 +100,15 @@
             </div>
 
             <div class="step-container " *ngIf="currentStep=='FINISHED' ">
-                <h2 class="glow " style="margin-bottom:1rem ">Finished!</h2>
+                <h2 class="glow " style="margin-bottom:1rem ">Transmuter Success!</h2>
                 <div>
-                    You have successfully bought $SAVIOR on DogeChain with BNB from BSC!
+                    Thanks for using the Egod Transmuter. Your wallet is blessed with $SAVIOR.
                 </div>
+                <button class="buy" (click)="startAgain()" [disabled]="!validAmount" *ngIf="!WaitingForBSCTx">Finish</button>
             </div>
         </div>
 
-        <div class="info-container check-tx-prompt" *ngIf="currentStep=='BUY'">
+        <div class="info-container check-tx-prompt" *ngIf="showAdvanced && currentStep=='BUY'">
             <div>
                 Transmuter Status Checker
             </div>
@@ -128,7 +133,7 @@
                     BSC: <a href="https://bscscan.com/tx/{{buyTransactionHash}} " target="_blank ">View transaction</a>
                 </div>
                 <div *ngIf="WaitingForOracle ">
-                    Oracle: Fetching status...
+                    Transmuter: Fetching status...
                 </div>
                 <div *ngIf="oracleTransactionHash ">
                     Dogechain: <a href="https://dogechain.info/tx/{{oracleTransactionHash}} " target="_blank ">View transaction</a>

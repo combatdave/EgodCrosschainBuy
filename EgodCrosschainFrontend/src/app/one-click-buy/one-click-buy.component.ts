@@ -130,6 +130,7 @@ export class OneClickBuyComponent implements OnInit {
     this.ShowDogechainActivity = true;
     if (!this.validate_txhash(txhash)) {
       console.error("Invalid txhash");
+      this.errorService.SetMessage("Invalid txhash");
       this.currentStep = "BUY";
       this.ShowBSCActivity = false;
       this.ShowDogechainActivity = false;
@@ -141,6 +142,7 @@ export class OneClickBuyComponent implements OnInit {
       this.activateStep("WAIT_FOR_ORACLE");
     } else {
       console.error("Failed to poke oracle for", txhash);
+      this.errorService.SetMessage("Failed to check transaction status, are you sure this is a valid BSC transaction hash?");
       this.currentStep = "BUY";
       this.ShowBSCActivity = false;
       this.ShowDogechainActivity = false;
@@ -189,9 +191,20 @@ export class OneClickBuyComponent implements OnInit {
     this.activateStep("WAIT_FOR_ORACLE");
   }
 
-  public isTransmuterEnabled: boolean = false;
+  public isTransmuterEnabled: boolean = true;
   
   public async updateTransmuterEnabled() {
     this.isTransmuterEnabled = await this.bscContract.checkEnabled();
+  }
+
+  public async startAgain() {
+    delete this.buyTransactionHash;
+    delete this.oracleTransactionHash;
+    this.activateStep("BUY");
+  }
+
+  public showAdvanced = false;
+  public advanced() {
+    this.showAdvanced = true;
   }
 }
