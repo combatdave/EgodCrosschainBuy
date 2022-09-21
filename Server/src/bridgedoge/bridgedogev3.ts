@@ -12,6 +12,7 @@ export type PayoutData = {
     egodRecieverContract: string;
     DCTokenAddress: string;
     amount: BigNumber;
+    dogechainBridgeTxHash: string;
 }
 
 export class BridgeDogeV3 {
@@ -37,7 +38,8 @@ export class BridgeDogeV3 {
                         buyer: egodEvent.buyer,
                         egodRecieverContract: data.recieverAddr,
                         DCTokenAddress: egodEvent.DCTokenAddress,
-                        amount: egodEvent.amountDoge
+                        amount: egodEvent.amountDoge,
+                        dogechainBridgeTxHash: data.brdigeTxHash
                     }
 
                     this.onPayoutDataAssembled.next(payoutData);
@@ -76,7 +78,8 @@ export class BridgeDogeV3 {
                     buyer: egodEvent.buyer,
                     egodRecieverContract: bscToDCData.recieverAddr,
                     DCTokenAddress: egodEvent.DCTokenAddress,
-                    amount: bscToDCData.amountRecieved
+                    amount: bscToDCData.amountRecieved,
+                    dogechainBridgeTxHash: bscToDCData.brdigeTxHash
                 }
 
                 this.onPayoutDataAssembled.next(payoutData);

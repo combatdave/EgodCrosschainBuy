@@ -7,8 +7,9 @@ export const DOGEBRIDGE_DC_ADDRESS = "0xB49D69115DBFe69F86f897c7a340A4d5f68f3B0c
 const API_URL = "https://explorer.dogechain.dog"; 
 
 export type BSCtoDCCallData = {
-    id: number,
-    amountRecieved: BigNumber,
+    brdigeTxHash: string;
+    id: number;
+    amountRecieved: BigNumber;
     recieverAddr: string;
 }
 
@@ -52,6 +53,7 @@ export class Bridgedoge_DogeChain {
                 const [amount, requestor, id] = ethers.utils.defaultAbiCoder.decode(["uint256", "address", "uint256"], ethers.utils.hexDataSlice(data, 4));
 
                 const bridgeCompleteData: BSCtoDCCallData = {
+                    brdigeTxHash: log.hash,
                     id: id.toNumber(),
                     amountRecieved: amount,
                     recieverAddr: requestor
@@ -82,6 +84,7 @@ export class Bridgedoge_DogeChain {
                 const [amount, requestor, id] = ethers.utils.defaultAbiCoder.decode(["uint256", "address", "uint256"], ethers.utils.hexDataSlice(data, 4));
 
                 const bridgeCompleteData: BSCtoDCCallData = {
+                    brdigeTxHash: log.hash,
                     id: id.toNumber(),
                     amountRecieved: amount,
                     recieverAddr: requestor
