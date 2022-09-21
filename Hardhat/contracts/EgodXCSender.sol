@@ -71,8 +71,6 @@ contract EgodXCSender is Ownable {
         feeByDCTokenAddressBase1000[DCTokenAddress] = feeBase1000;
     }
 
-    event egodCrossChainBuy(address indexed buyer, address indexed DCTokenAddress, uint indexed bridgeId, uint256 amountDoge);
-
     function doOneClickBuy(address DCTokenAddress) public payable {
         require(allEnabled, "EgodXCSender: Disabled");
         require(recieversByDCTokenAddress[DCTokenAddress].enabled, "EgodXCSender: No reciever.");
@@ -94,18 +92,48 @@ contract EgodXCSender is Ownable {
             address(this),
             block.timestamp
         );
-
         uint balance_after = doge.balanceOf(address(this));
-
         uint amountToSend = balance_after - balance_before;
 
+        if (useSelfBridge) {
+            bridgeOut_Self(DCTokenAddress, amountToSend);
+        } else {
+            bridgeOut_BridgeDoge(DCTokenAddress, amountToSend);
+        }
+    }
+
+    bool public useSelfBridge = false;
+    function setUseSelfBridge(bool newUseSelfBridge) public onlyOwner {
+        useSelfBridge = newUseSelfBridge;
+    }
+
+    uint public selfFeePercent = 2;
+    function setSelfFeePercent(uint newSelfFeePercent) public onlyOwner {
+        selfFeePercent = newSelfFeePercent;
+    }
+
+    event takenFee(address indexed sender, uint256 amount);
+    event egodCrossChainBuy_Self(address indexed buyer, address indexed DCTokenAddress, uint256 amountDoge);
+    function bridgeOut_Self(address DCTokenAddress, uint256 amountToSend) internal {
+        uint fee = amountToSend * selfFeePercent / 100;
+        uint amountOut = amountToSend - fee;
+        emit takenFee(msg.sender, fee);
+        emit egodCrossChainBuy_Self(msg.sender, DCTokenAddress, amountOut);
+    }
+
+    event egodCrossChainBuy_BridgeDoge(address indexed buyer, address indexed DCTokenAddress, uint indexed bridgeId, uint256 amountDoge);
+    function bridgeOut_BridgeDoge(address DCTokenAddress, uint256 amountToSend) internal {
         address dogechainRecieverAddress = recieversByDCTokenAddress[DCTokenAddress].recieverAddress;
 
         uint bridgeId = bridgeDoge.currentBridgeId(); // The correct bridge ID is the one before bc ???
         bridgeDoge.BSCToDC(dogechainRecieverAddress, amountToSend);
         IBridgeDoge.BridgeTx memory bridgeTx = bridgeDoge.readTransaction(bridgeId);
         
-        emit egodCrossChainBuy(msg.sender, DCTokenAddress, bridgeId, bridgeTx.amount);
+        emit egodCrossChainBuy_BridgeDoge(msg.sender, DCTokenAddress, bridgeId, bridgeTx.amount);
+    }
+
+    function withdrawDoge() public onlyOwner {
+        doge.transfer(msg.sender, doge.balanceOf(address(this)));
     }
 
     function rescue(address token, uint amount) public onlyOwner {
