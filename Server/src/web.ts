@@ -41,6 +41,7 @@ export async function StartServer(oracle: Oracle) {
     });
 
     app.post("/processtx", async (req: Request, res: Response) => {
+        
         let txhash = req.query.txhash as string;
         let d = {
             status: "error",

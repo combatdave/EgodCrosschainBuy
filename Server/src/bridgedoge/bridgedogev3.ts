@@ -65,6 +65,7 @@ export class BridgeDogeV3 {
     }
 
     public async manualProcessBSCTransaction(txhash: string): Promise<boolean> {
+        console.log("BridgeDogeV3 manualProcessBSCTransaction:", txhash);
         let success = false;
         const egodEvent = await this.findEgodCrossChainBuyEventFromTx(txhash);
         if (egodEvent) {

@@ -43,7 +43,7 @@ export class Bridgedoge_DogeChain {
         const d = await ethers.utils.fetchJson(url);
         const logs = d.result;
 
-        logs.forEach(async (log: any) => {
+        logs.forEach((log: any) => {
             let data: string = log.input;
 
             const BSCtoDC = "0x12d8294c";
@@ -63,14 +63,17 @@ export class Bridgedoge_DogeChain {
 
     public async findBSCtoDCForBridgeId(bridgeId: number): Promise<BSCtoDCCallData | undefined> {
         const blockNumber = await this.getBlockNumber();
-
         const toBlock = blockNumber;
 
         const url = `${API_URL}/api?module=account&action=txlist&address=${DOGEBRIDGE_DC_ADDRESS}&endBlock=${toBlock}`;
         const d = await ethers.utils.fetchJson(url);
         const logs = d.result;
 
-        logs.forEach(async (log: any) => {
+        let foundData: BSCtoDCCallData | undefined = undefined;
+
+        for (let i=0; i<logs.length; i++) {
+            let log = logs[i];
+
             let data: string = log.input;
 
             const BSCtoDC = "0x12d8294c";
@@ -83,13 +86,15 @@ export class Bridgedoge_DogeChain {
                     amountRecieved: amount,
                     recieverAddr: requestor
                 }
+
                 if (bridgeCompleteData.id == bridgeId) {
-                    return bridgeCompleteData;
+                    foundData = bridgeCompleteData;
+                    break;
                 }
             }
-        });
+        }
 
-        return undefined;
+        return foundData;
     }  
 }
 
