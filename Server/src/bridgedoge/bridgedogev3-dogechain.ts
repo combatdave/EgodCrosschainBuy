@@ -1,9 +1,7 @@
-import {BigNumber, Contract, ethers} from "ethers";
+import {BigNumber, ethers} from "ethers";
 import { Subject } from "rxjs";
-import { Oracle } from "../oracle";
-// import { contract_egodXCReciever_dogechain } from "./connections";
 
-export const DOGEBRIDGE_DC_ADDRESS = "0x13DC2D5BbE8471406eE82121FC33A4F7DaBe8B88";
+export const DOGEBRIDGE_DC_ADDRESS = "0xB49D69115DBFe69F86f897c7a340A4d5f68f3B0c";
 
 // const API_URL = "https://explorer.dogmoney.money";
 const API_URL = "https://explorer.dogechain.dog"; 
@@ -61,6 +59,37 @@ export class Bridgedoge_DogeChain {
                 this.onBridgedogeBSCtoDCCall.next(bridgeCompleteData);
             }
         });
+    }
+
+    public async findBSCtoDCForBridgeId(bridgeId: number): Promise<BSCtoDCCallData | undefined> {
+        const blockNumber = await this.getBlockNumber();
+
+        const toBlock = blockNumber;
+
+        const url = `${API_URL}/api?module=account&action=txlist&address=${DOGEBRIDGE_DC_ADDRESS}&endBlock=${toBlock}`;
+        const d = await ethers.utils.fetchJson(url);
+        const logs = d.result;
+
+        logs.forEach(async (log: any) => {
+            let data: string = log.input;
+
+            const BSCtoDC = "0x12d8294c";
+            if (data.toLowerCase().startsWith(BSCtoDC.toLowerCase()))
+            {
+                const [amount, requestor, id] = ethers.utils.defaultAbiCoder.decode(["uint256", "address", "uint256"], ethers.utils.hexDataSlice(data, 4));
+
+                const bridgeCompleteData: BSCtoDCCallData = {
+                    id: id.toNumber(),
+                    amountRecieved: amount,
+                    recieverAddr: requestor
+                }
+                if (bridgeCompleteData.id == bridgeId) {
+                    return bridgeCompleteData;
+                }
+            }
+        });
+
+        return undefined;
     }  
 }
 

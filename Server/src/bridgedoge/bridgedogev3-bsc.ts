@@ -1,5 +1,4 @@
-import { BigNumber, Contract, ethers } from "ethers";
-import { Subject } from "rxjs";
+import { BigNumber, ethers } from "ethers";
 import { contract_egodXCSender_bsc, provider_bsc } from "../connections";
 
 export type EgodCrossChainBuyEvent = {
@@ -24,7 +23,7 @@ export class Bridgedogev3BSCWatcher {
         for (let i=0; i<logs.length; i++) {
             const log = logs[i];
             const parsed = contract_egodXCSender_bsc.interface.parseLog(log);
-            if (parsed.name == "egodCrossChainBuy") {
+            if (parsed.name == "egodCrossChainBuy_BridgeDoge") {
                 if (parsed.args.bridgeId.toNumber() == bridgedogeBridgeId) {
                     const params: EgodCrossChainBuyEvent = {
                         txhash: log.transactionHash,

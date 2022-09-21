@@ -5,6 +5,8 @@ import { BridgeDogeV3, PayoutData } from "./bridgedoge/bridgedogev3";
 
 
 export class Oracle {
+    public finishedTransactions: {[txhash: string]: boolean} = {};
+
     constructor(public bridgedoge: BridgeDogeV3) {
         this.bridgedoge.onPayoutDataAssembled.subscribe(async (data: PayoutData) => {
             this.checkAndPush(data);
@@ -12,9 +14,21 @@ export class Oracle {
     }
 
     private async checkAndPush(payoutData: PayoutData) {
-        const alreadyProcessed = await this.checkProcessedStatus(payoutData.txhash);
+        if (this.finishedTransactions.hasOwnProperty(payoutData.txhash)) {
+            if (this.finishedTransactions[payoutData.txhash] == true) return;
+        }
+
+        const alreadyProcessed = await this.isPayoutProcessed(payoutData);
+        if (alreadyProcessed) {
+            this.finishedTransactions[payoutData.txhash] = true;
+            return;
+        }
+
         if (!alreadyProcessed) {
-            await this.pushDataToXCReciever(payoutData);
+            const finishTxHash = await this.pushDataToXCReciever(payoutData);
+            if (finishTxHash) {
+                this.finishedTransactions[payoutData.txhash] = true;
+            }
         }
     }
 
@@ -35,20 +49,29 @@ export class Oracle {
         return;
     }
 
-    public async checkProcessedStatus(txhash: string): Promise<boolean | undefined> {
+    private async isPayoutProcessed(payoutData: PayoutData): Promise<boolean> {
+        const contract = await this.getRecieverForDogechainToken(payoutData.DCTokenAddress);
+        if (contract) {
+            return await contract.isProcessed(payoutData.txhash);
+        }
+        return false;
+    }
+
+    public async checkBSCTransaction(txhash: string): Promise<boolean | string> {
         const eventData = await this.bridgedoge.findEgodCrossChainBuyEventFromTx(txhash);
         if (!eventData) {
-            return undefined;
+            return "Couldn't find EgodCrossChainBuy event for txhash";
         }
         const contract = await this.getRecieverForDogechainToken(eventData.DCTokenAddress);
         if (contract) {
             return await contract.isProcessed(txhash);
         }
-        return undefined;
+        return "Couldn't find Transmuter reciever contract for " + eventData.DCTokenAddress;
     }
 
     public async processHash(txhash: string) : Promise<boolean> {
-        return false;
+        this.finishedTransactions[txhash] = false;
+        return await this.bridgedoge.manualProcessBSCTransaction(txhash);
     }
 
     private _cachedRecieversByTokenAddress: {[tokenAddress: string]: Contract} = {};
@@ -67,7 +90,7 @@ export class Oracle {
     }
 
     public async getTransactionStatus(txhash: string) {
-        const processed = await this.checkProcessedStatus(txhash);
+        const processed = await this.checkBSCTransaction(txhash);
         if (processed == undefined) {
             return {
                 status: "unknown",

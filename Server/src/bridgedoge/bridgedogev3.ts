@@ -6,9 +6,6 @@ import dogechain_abi from "./bridgedoge_dogechain_abi.json";
 import { Bridgedoge_DogeChain, BSCtoDCCallData as BridgedogeBSCtoDCParams } from "./bridgedogev3-dogechain";
 import { Subject } from "rxjs";
 
-const BRIDGEDOGE_BSC_ADDR = "0x62b8aeb90f3fa3a46607f266e882c4e9cb98f3da";
-const BRIDGEDOGE_DOGECHAIN_ADDR = "0x13DC2D5BbE8471406eE82121FC33A4F7DaBe8B88";
-
 export type PayoutData = {
     txhash: string;
     buyer: string;
@@ -20,6 +17,7 @@ export type PayoutData = {
 export class BridgeDogeV3 {
 
     public onPayoutDataAssembled = new Subject<PayoutData>();
+    private dogechainWatcher: Bridgedoge_DogeChain;
 
     private recievers: string[] = [];
 
@@ -27,11 +25,12 @@ export class BridgeDogeV3 {
 
         this.loadRecievers();
 
-        let dogechainWatcher = new Bridgedoge_DogeChain();
+        this.dogechainWatcher = new Bridgedoge_DogeChain();
 
-        dogechainWatcher.onBridgedogeBSCtoDCCall.subscribe(async (data: BridgedogeBSCtoDCParams) => {
+        this.dogechainWatcher.onBridgedogeBSCtoDCCall.subscribe(async (data: BridgedogeBSCtoDCParams) => {
             if (this.isEgodReciever(data.recieverAddr)) {
                 const egodEvent = await this.findEgodCrossChainBuyEvent(data.id);
+                // console.log("BridgeDoge BSCtoDC(", data.id, ") => EgodCrossChainBuyEvent:", egodEvent);
                 if (egodEvent) {
                     const payoutData: PayoutData = {
                         txhash: egodEvent.txhash,
@@ -46,7 +45,7 @@ export class BridgeDogeV3 {
             }
         });
 
-        dogechainWatcher.watch();
+        this.dogechainWatcher.watch();
     }
 
     private async loadRecievers() {
@@ -63,5 +62,27 @@ export class BridgeDogeV3 {
 
     public async findEgodCrossChainBuyEventFromTx(txhash: string) : Promise<EgodCrossChainBuyEvent | undefined>{
         return await Bridgedogev3BSCWatcher.findEgodCrossChainBuyEventFromTx(txhash);
+    }
+
+    public async manualProcessBSCTransaction(txhash: string): Promise<boolean> {
+        let success = false;
+        const egodEvent = await this.findEgodCrossChainBuyEventFromTx(txhash);
+        if (egodEvent) {
+            const bscToDCData = await this.dogechainWatcher.findBSCtoDCForBridgeId(egodEvent.bridgeId);
+            if (bscToDCData) {
+                const payoutData: PayoutData = {
+                    txhash: egodEvent.txhash,
+                    buyer: egodEvent.buyer,
+                    egodRecieverContract: bscToDCData.recieverAddr,
+                    DCTokenAddress: egodEvent.DCTokenAddress,
+                    amount: egodEvent.amountDoge
+                }
+
+                this.onPayoutDataAssembled.next(payoutData);
+
+                success = true;
+            }
+        }
+        return success;
     }
 }

@@ -46,13 +46,10 @@ export async function StartServer(oracle: Oracle) {
             status: "error",
         }
         if (txhash) {
-            
-            const processed = await oracle.checkProcessedStatus(txhash);
+            const processed = await oracle.checkBSCTransaction(txhash);
             if (processed) {
                 d.status = "already processed";
             }
-
-
             try {
                 const startedProcessing = await oracle.processHash(txhash);
                 if (startedProcessing) {
