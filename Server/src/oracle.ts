@@ -90,14 +90,14 @@ export class Oracle {
     }
 
     public async getTransactionStatus(txhash: string) {
-        const processed = await this.checkBSCTransaction(txhash);
-        if (processed == undefined) {
+        const status = await this.checkBSCTransaction(txhash);
+        if (status == undefined) {
             return {
                 status: "unknown",
                 data: undefined
             }
         }
-        else if (processed == true) {
+        else if (status == true) {
             return {
                 status: "complete",
                 data: undefined
@@ -105,7 +105,7 @@ export class Oracle {
         }
         else {
             return {
-                status: "processing",
+                status: status,
                 data: undefined
             }
         }

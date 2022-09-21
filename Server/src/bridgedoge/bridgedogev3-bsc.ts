@@ -47,7 +47,7 @@ export class Bridgedogev3BSCWatcher {
             const log = logs[i];
             try {
                 const parsed = contract_egodXCSender_bsc.interface.parseLog(log);
-                if (parsed.name == "egodCrossChainBuy") {
+                if (parsed.name == "egodCrossChainBuy_BridgeDoge") {
                     const params: EgodCrossChainBuyEvent = {
                         txhash: log.transactionHash,
                         buyer: parsed.args.buyer,
