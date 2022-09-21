@@ -26,7 +26,7 @@ export class BSCContractService {
 
   private chainId: Number = BSC_CHAIN_ID;
   private connecting: boolean = false;
-  private hasMetamask: boolean = false;
+  public hasMetamask: boolean = false;
   public onConnected: Subject<void> = new Subject<void>();
   public onAccountChanged: Subject<void> = new Subject<void>();
   private provider!: ethers.providers.Web3Provider;

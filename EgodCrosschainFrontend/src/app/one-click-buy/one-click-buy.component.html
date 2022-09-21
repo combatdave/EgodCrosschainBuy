@@ -3,12 +3,7 @@
 <img src="../../assets/Heaven’s Gate.png" alt="Heaven’s Gate" class="heavens-gate-logo">
 
 <div class="container">
-    <div class="box" *ngIf="!isTransmuterEnabled">
-        <h3>Transmuter is disabled</h3>
-        <div class="description">The transmuter is temporarily disabled. Please try again later.</div>
-    </div>
-
-    <div class="box" *ngIf="isTransmuterEnabled">
+    <div class="box">
         <div class="fack">
             <h3 class="glow">Buy $SAVIOR on DogeChain</h3>
             <h3 class="glow" style="text-align: right">With BNB from BSC</h3>
@@ -19,7 +14,21 @@
             <button class="buy" (click)="connectWallet()">Connect Wallet</button>
         </div>
 
-        <div class="buy-container">
+        <div class="buy-container" *ngIf="!bscContract.hasMetamask">
+            <div class="step-container" style="padding-top: 0.5rem">
+                <h3 style="color: orangered">No Metamask</h3>
+                <div class="description">The Transmuter requires a metamask-enabled browser.</div>
+            </div>
+        </div>
+
+        <div class="buy-container" *ngIf="bscContract.connectedAccountAddress && !isTransmuterEnabled">
+            <div class="step-container" style="padding-top: 0.5rem">
+                <h3 style="color: orangered">Transmuter Disabled</h3>
+                <div class="description">The Transmuter is temporarily disabled. Please try again later.</div>
+            </div>
+        </div>
+
+        <div class="buy-container" *ngIf="bscContract.connectedAccountAddress && isTransmuterEnabled">
             <div class="activity-container">
                 <div class="beam" [hidden]="!ShowZoomer">
                 </div>
@@ -96,8 +105,9 @@
 
         <div class="info-container check-tx-prompt" *ngIf="currentStep=='BUY'">
             <div>
-                Check BSC transaction status
+                Transmuter Status Checker
             </div>
+            <small>If you've already started a transaction, you can use this to check the status.</small>
             <div style="width:100%; display:flex; flex-direction:row; ">
                 <input #checkTxHash placeholder="BSC transaction hash (0x...)">
                 <button (click)="checkTransaction(checkTxHash.value)">
@@ -138,5 +148,5 @@
 
 <div class="footer ">
     <span>BSC contract: <a href="https://bscscan.com/address/{{EgodXCSenderAddress}} " target="_blank ">{{shortAddress(EgodXCSenderAddress)}}</a></span>
-    <span>DogeChain contract: <a href="https://explorer.dogechain.dog/address/{{EgodXCRecieverAddress}} ">{{shortAddress(EgodXCRecieverAddress)}}</a></span>
+    <span>DogeChain contract: <a href="https://explorer.dogechain.dog/address/{{EgodXCRecieverAddress}}" target="_blank">{{shortAddress(EgodXCRecieverAddress)}}</a></span>
 </div>
