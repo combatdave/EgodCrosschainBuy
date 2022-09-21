@@ -104,7 +104,7 @@
             </div>
         </div>
 
-        <div class="info-container " *ngIf="ShowZoomer || buyTransactionHash || oracleTransactionHash ">
+        <div class="info-container " *ngIf="ShowZoomer || buyTransactionHash || oracleTransactionCompleted==false ">
             <div style="width:100%; display:flex; flex-direction:column; ">
                 <div>
                     EGOD TUNNEL INFO
@@ -118,9 +118,9 @@
                 <!-- <div *ngIf="WaitingForOracle ">
                     Oracle: Fetching status...
                 </div> -->
-                <div *ngIf="oracleTransactionHash ">
-                    Dogechain: <a href="https://dogechain.info/tx/{{oracleTransactionHash}} " target="_blank ">View transaction</a>
-                </div>
+                <!-- <div *ngIf="oracleTransactionCompleted ">
+                    Dogechain: <a href="https://dogechain.info/tx/{{oracleTransactionCompleted}} " target="_blank ">View transaction</a>
+                </div> -->
             </div>
         </div>
 

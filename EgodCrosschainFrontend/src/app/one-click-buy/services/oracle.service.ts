@@ -29,11 +29,11 @@ export class OracleService {
     return true;
   }
 
-  public async waitForOracle(bsctx: string): Promise<string> {
+  public async waitForOracle(bsctx: string): Promise<boolean> {
     this.bscTxHash = bsctx;
     this.status = "unknown";
     await this.waitForCompletionData();
-    return this.completionData.dogechainTxHash;
+    return true;
   }
 
   private async waitForCompletionData() {
