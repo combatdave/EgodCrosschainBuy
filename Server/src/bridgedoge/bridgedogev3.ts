@@ -76,7 +76,7 @@ export class BridgeDogeV3 {
                     buyer: egodEvent.buyer,
                     egodRecieverContract: bscToDCData.recieverAddr,
                     DCTokenAddress: egodEvent.DCTokenAddress,
-                    amount: egodEvent.amountDoge
+                    amount: bscToDCData.amountRecieved
                 }
 
                 this.onPayoutDataAssembled.next(payoutData);
