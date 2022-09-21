@@ -5,7 +5,18 @@ import { BridgeDogeV3, PayoutData } from "./bridgedoge/bridgedogev3";
 
 
 export class Oracle {
-    public finishedTransactions: {[txhash: string]: boolean} = {};
+    private _finishedTransactionHashes: {[txhash: string]: string} = {};
+
+    public getFinishedTransactionHash(txhash: string) : string | undefined {
+        if (this._finishedTransactionHashes.hasOwnProperty(txhash.toLowerCase())) {
+            return this._finishedTransactionHashes[txhash.toLowerCase()];
+        }
+        return;
+    }
+
+    private setFinishedTransactionHash(txHash: string, oracleTxHash: string) {
+        this._finishedTransactionHashes[txHash.toLowerCase()] = oracleTxHash.toLowerCase();
+    }
 
     constructor(public bridgedoge: BridgeDogeV3) {
         this.bridgedoge.onPayoutDataAssembled.subscribe(async (data: PayoutData) => {
@@ -14,20 +25,20 @@ export class Oracle {
     }
 
     private async checkAndPush(payoutData: PayoutData) {
-        if (this.finishedTransactions.hasOwnProperty(payoutData.txhash)) {
-            if (this.finishedTransactions[payoutData.txhash] == true) return;
+        if (this.getFinishedTransactionHash(payoutData.txhash)) {
+            return;
         }
 
         const alreadyProcessed = await this.isPayoutProcessed(payoutData);
         if (alreadyProcessed) {
-            this.finishedTransactions[payoutData.txhash] = true;
+            this.getOraclePayoutTransaction(payoutData.txhash);
             return;
         }
 
         if (!alreadyProcessed) {
-            const finishTxHash = await this.pushDataToXCReciever(payoutData);
-            if (finishTxHash) {
-                this.finishedTransactions[payoutData.txhash] = true;
+            const oracleTxHash = await this.pushDataToXCReciever(payoutData);
+            if (oracleTxHash) {
+                this.setFinishedTransactionHash(payoutData.txhash, oracleTxHash);
             }
         }
     }
@@ -75,7 +86,7 @@ export class Oracle {
     }
 
     public async processHash(txhash: string) : Promise<boolean> {
-        this.finishedTransactions[txhash] = false;
+        delete this._finishedTransactionHashes[txhash.toLowerCase()];
         return await this.bridgedoge.manualProcessBSCTransaction(txhash);
     }
 
@@ -94,24 +105,35 @@ export class Oracle {
         }
     }
 
+    private async getOraclePayoutTransaction(bscTxHash: string): Promise<string | undefined> {
+        const oracleTxHash = this.getFinishedTransactionHash(bscTxHash);
+        if (oracleTxHash) {
+            return oracleTxHash;
+        }
+
+        const oraclePayoutTxHash = await this.bridgedoge.findOraclePayoutForBSCTxHash(bscTxHash);
+        if (oraclePayoutTxHash) {
+            this.setFinishedTransactionHash(bscTxHash, oraclePayoutTxHash);
+        }
+        return oraclePayoutTxHash
+    }
+
     public async getTransactionStatus(txhash: string) {
         const status = await this.checkBSCTransaction(txhash);
         if (status == undefined) {
             return {
                 status: "unknown",
-                data: undefined
             }
         }
         else if (status == true) {
             return {
                 status: "complete",
-                data: undefined
+                oracleTxHash: await this.getOraclePayoutTransaction(txhash)
             }
         }
         else {
             return {
                 status: status,
-                data: undefined
             }
         }
     }

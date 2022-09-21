@@ -71,14 +71,11 @@ export async function StartServer(oracle: Oracle) {
     app.get("/txstatus", async (req: Request, res: Response) => {
         let txhash = req.query.txhash as string;
         let d:any = {
-            txhash: txhash,
             status: "unknown",
         }
 
         if (txhash) {
-            const {status, data} = await oracle.getTransactionStatus(txhash);
-            d.status = status;
-            d.data = data;
+            d = await oracle.getTransactionStatus(txhash);
         } else {
             d.status = "missing arg txhash";
         }

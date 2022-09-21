@@ -13,6 +13,7 @@ export const provider_dogechain = new ethers.providers.JsonRpcProvider("https://
 export const oracleWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider_dogechain);
 
 export const contract_egodXCSender_bsc = new Contract(EgodXCSenderDeployment.address, EgodXCSenderDeployment.abi, provider_bsc);
+export const egodXCRecieverInterface = new ethers.utils.Interface(EgodXCRDeployment.abi);
 // export const contract_egodXCReciever_dogechain = new Contract(EgodXCRDeployment.address, EgodXCRDeployment.abi, provider_dogechain);
 
 export function getDogechainRecieverContract(address: string): Contract  {

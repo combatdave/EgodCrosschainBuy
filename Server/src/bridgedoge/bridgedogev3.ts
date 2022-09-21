@@ -66,6 +66,10 @@ export class BridgeDogeV3 {
         return await Bridgedogev3BSCWatcher.findEgodCrossChainBuyEventFromTx(txhash);
     }
 
+    public async findOraclePayoutForBSCTxHash(txhash: string) {
+        return await this.dogechainWatcher.findOraclePayoutTxForBSCTxHash(txhash);
+    }
+
     public async manualProcessBSCTransaction(txhash: string): Promise<boolean> {
         console.log("BridgeDogeV3 manualProcessBSCTransaction:", txhash);
         let success = false;
