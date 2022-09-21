@@ -33,11 +33,16 @@ export class Oracle {
     }
 
     private async pushDataToXCReciever(payoutData: PayoutData): Promise<string | undefined> {
-        console.log("↘️  Oracle pushing data to EgodXCR:", payoutData.txhash, payoutData.amount.toString(), payoutData.buyer);
-        Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.txhash, amountRecieved: payoutData.amount.toString(), from: payoutData.buyer});
+        const wDogeValue = payoutData.amount.mul("10000000000");
+        console.log("↘️  Oracle pushing data to EgodXCR:");
+        console.log("↘️  BSC Tx Hash: " + payoutData.txhash);
+        console.log("↘️  Dogechain Token Address: " + payoutData.DCTokenAddress);
+        console.log("↘️  Amount: " + ethers.utils.formatEther(wDogeValue) + "wDOGE");
+
+        Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.txhash, wDogeValue: wDogeValue.toString(), buyer: payoutData.buyer});
         try {
             const contract = getDogechainRecieverContract(payoutData.egodRecieverContract);
-            let tx = await contract.connect(oracleWallet).processBuy(payoutData.txhash, payoutData.amount, payoutData.buyer) as ethers.ContractTransaction;
+            let tx = await contract.connect(oracleWallet).processBuy(payoutData.txhash, wDogeValue, payoutData.buyer) as ethers.ContractTransaction;
             console.log("↘️  ✔️ Oracle tx:", tx.hash);
             let reciept = tx.wait();
             console.log("↘️  ✔️ Oracle work complete");
