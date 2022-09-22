@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 import "./PancakeSwap.sol";
 import "./IBridgeDoge.sol";
+import "./ISynapseBridge.sol";
 
 struct DCRecieverData {
     address recieverAddress;
@@ -13,9 +14,11 @@ struct DCRecieverData {
 }
 
 address constant BNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
-address constant anyDOGE = 0x57F3FEe2cfa3769fD25E3774Eb514FACe7C70BEb;
 
 contract EgodXCSender is Ownable {
+
+    enum Bridge{ NONE, SELF, BRIDGEDOGE, SYNAPSE }
+    Bridge public useBridge = Bridge.BRIDGEDOGE;
 
     uint public minimumBuy = 0.1 ether;
     bool public allEnabled = true;
@@ -95,16 +98,19 @@ contract EgodXCSender is Ownable {
         uint balance_after = doge.balanceOf(address(this));
         uint amountToSend = balance_after - balance_before;
 
-        if (useSelfBridge) {
+        if (useBridge == Bridge.SELF) {
             bridgeOut_Self(DCTokenAddress, amountToSend);
-        } else {
+        } else if (useBridge == Bridge.BRIDGEDOGE) {
             bridgeOut_BridgeDoge(DCTokenAddress, amountToSend);
+        } else if (useBridge == Bridge.SYNAPSE) {
+            bridgeOut_Synapse(DCTokenAddress, amountToSend);
+        } else {
+            revert("EgodXCSender: Invalid bridge.");
         }
     }
 
-    bool public useSelfBridge = false;
-    function setUseSelfBridge(bool newUseSelfBridge) public onlyOwner {
-        useSelfBridge = newUseSelfBridge;
+    function setCurrentBridge(Bridge newBridge) public onlyOwner {
+        useBridge = newBridge;
     }
 
     uint public selfFeePercent = 2;
@@ -130,6 +136,18 @@ contract EgodXCSender is Ownable {
         IBridgeDoge.BridgeTx memory bridgeTx = bridgeDoge.readTransaction(bridgeId);
         
         emit egodCrossChainBuy_BridgeDoge(msg.sender, DCTokenAddress, bridgeId, bridgeTx.amount);
+    }
+
+    event egodCrossChainBuy_Synapse(address indexed buyer, address indexed DCTokenAddress, uint256 amountDoge);
+    function bridgeOut_Synapse(address DCTokenAddress, uint256 amountToSend) internal {
+        address dogechainRecieverAddress = recieversByDCTokenAddress[DCTokenAddress].recieverAddress;
+
+        ISynapseBridge bridge = ISynapseBridge(BSC_SYNAPSE_ADDRESS);
+        uint chainId = 2000;
+        IERC20 token = IERC20(BSC_DOGE);
+        bridge.deposit(dogechainRecieverAddress, chainId, token, amountToSend);
+        
+        emit egodCrossChainBuy_Synapse(msg.sender, DCTokenAddress, amountToSend);
     }
 
     function withdrawDoge() public onlyOwner {

@@ -100,10 +100,12 @@
             </div>
 
             <div class="step-container " *ngIf="currentStep=='FINISHED' ">
-                <h2 class="glow " style="margin-bottom:1rem ">Transmuter Success!</h2>
+                <h2 class="glow " style="margin-bottom:1rem ">wow</h2>
                 <div>
                     Thanks for using the Egod Transmuter. Your wallet is blessed with $SAVIOR.
+                    <br><br> Now catch us on <a href="https://t.me/egodthesavior" target="_blank">Telegram</a>, how bout dat?
                 </div>
+                <br>
                 <button class="buy" (click)="startAgain()" [disabled]="!validAmount" *ngIf="!WaitingForBSCTx">Finish</button>
             </div>
         </div>
