@@ -7,8 +7,7 @@ export const BRIDGEDOGE_DC_ADDRESS = "0xB49D69115DBFe69F86f897c7a340A4d5f68f3B0c
 
 const API_URLS = [
     "https://explorer.dogechain.dog",
-    "https://explorer.dogmoney.money",
-    "https://poop.dog"
+    "https://explorer.dogmoney.money"
 ];
 
 
