@@ -1,7 +1,7 @@
 import { Contract, ethers } from "ethers";
 import { contract_egodXCSender_bsc, getDogechainRecieverContract, oracleWallet } from "./connections";
 import { Logger } from "./logs";
-import { BridgeDogeV3, PayoutData } from "./bridgedoge/bridgedogev3";
+import { Transmuter_Base, PayoutData } from "./bridge";
 
 
 export class Oracle {
@@ -18,8 +18,8 @@ export class Oracle {
         this._finishedTransactionHashes[txHash.toLowerCase()] = oracleTxHash.toLowerCase();
     }
 
-    constructor(public bridgedoge: BridgeDogeV3) {
-        this.bridgedoge.onPayoutDataAssembled.subscribe(async (data: PayoutData) => {
+    constructor(public bridge: Transmuter_Base) {
+        this.bridge.onPayoutDataAssembled.subscribe(async (data: PayoutData) => {
             this.checkAndPush(data);
         });
     }
@@ -44,25 +44,43 @@ export class Oracle {
     }
 
     private async pushDataToXCReciever(payoutData: PayoutData): Promise<string | undefined> {
-        const wDogeValue = payoutData.amount.mul("10000000000");
-        console.log("↘️  Oracle pushing data to EgodXCR:");
-        console.log("↘️  BSC Tx Hash: " + payoutData.txhash);
-        console.log("↘️  Dogechain Token Address: " + payoutData.DCTokenAddress);
-        console.log("↘️  Amount: " + ethers.utils.formatEther(wDogeValue) + "wDOGE");
+        if (payoutData.bridgedToken == "DOGE") {
+            const wDogeValue = payoutData.amount.mul("10000000000");
+            console.log("↘️  Oracle pushing data to EgodXCR:");
+            console.log("↘️  BSC Tx Hash: " + payoutData.txhash);
+            console.log("↘️  Dogechain Token Address: " + payoutData.DCTokenAddress);
+            console.log("↘️  Amount: " + ethers.utils.formatEther(wDogeValue) + "wDOGE");
 
-        Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.txhash, wDogeValue: wDogeValue.toString(), buyer: payoutData.buyer});
-        try {
-            const contract = getDogechainRecieverContract(payoutData.egodRecieverContract);
-            let tx = await contract.connect(oracleWallet).processBuy(payoutData.txhash, wDogeValue, payoutData.buyer) as ethers.ContractTransaction;
-            console.log("↘️  ✔️ Oracle tx:", tx.hash);
-            let reciept = tx.wait();
-            console.log("↘️  ✔️ Oracle work complete");
-            return tx.hash;
-        } catch (e) {
-            console.error("↘️  ❌ ORACLE ERROR:", e);
-            return;
+            Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.txhash, wDogeValue: wDogeValue.toString(), buyer: payoutData.buyer});
+            try {
+                const contract = getDogechainRecieverContract(payoutData.egodRecieverContract);
+                let tx = await contract.connect(oracleWallet).processBuy(payoutData.txhash, wDogeValue, payoutData.buyer) as ethers.ContractTransaction;
+                console.log("↘️  ✔️ Oracle tx:", tx.hash);
+                let reciept = tx.wait();
+                console.log("↘️  ✔️ Oracle work complete");
+                return tx.hash;
+            } catch (e) {
+                console.error("↘️  ❌ ORACLE ERROR:", e);
+            }
+        } else if (payoutData.bridgedToken == "BUSD") {
+            const busdValue = payoutData.amount;
+            console.log("↘️  Oracle pushing data to EgodXCR:");
+            console.log("↘️  BSC Tx Hash: " + payoutData.txhash);
+            console.log("↘️  Dogechain Token Address: " + payoutData.DCTokenAddress);
+            console.log("↘️  Amount: " + ethers.utils.formatEther(busdValue) + "BUSD");
+
+            Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.txhash, wDogeValue: busdValue.toString(), buyer: payoutData.buyer});
+            try {
+                const contract = getDogechainRecieverContract(payoutData.egodRecieverContract);
+                let tx = await contract.connect(oracleWallet).processBuyWithBUSD(payoutData.txhash, busdValue, payoutData.buyer) as ethers.ContractTransaction;
+                console.log("↘️  ✔️ Oracle tx:", tx.hash);
+                let reciept = tx.wait();
+                console.log("↘️  ✔️ Oracle work complete");
+                return tx.hash;
+            } catch (e) {
+                console.error("↘️  ❌ ORACLE ERROR:", e);
+            }
         }
-        return;
     }
 
     private async isPayoutProcessed(payoutData: PayoutData): Promise<boolean> {
@@ -74,7 +92,7 @@ export class Oracle {
     }
 
     public async checkBSCTransaction(txhash: string): Promise<boolean | string> {
-        const eventData = await this.bridgedoge.findEgodCrossChainBuyEventFromTx(txhash);
+        const eventData = await this.bridge.findEgodCrossChainBuyEventFromTx(txhash);
         if (!eventData) {
             return "Couldn't find EgodCrossChainBuy event for txhash";
         }
@@ -87,7 +105,7 @@ export class Oracle {
 
     public async processHash(txhash: string) : Promise<boolean> {
         delete this._finishedTransactionHashes[txhash.toLowerCase()];
-        return await this.bridgedoge.manualProcessBSCTransaction(txhash);
+        return await this.bridge.manualProcessBSCTransaction(txhash);
     }
 
     private _cachedRecieversByTokenAddress: {[tokenAddress: string]: Contract} = {};
@@ -111,7 +129,7 @@ export class Oracle {
             return oracleTxHash;
         }
 
-        const oraclePayoutTxHash = await this.bridgedoge.findOraclePayoutForBSCTxHash(bscTxHash);
+        const oraclePayoutTxHash = await this.bridge.findOraclePayoutTxForBSCTxHash(bscTxHash);
         if (oraclePayoutTxHash) {
             this.setFinishedTransactionHash(bscTxHash, oraclePayoutTxHash);
         }

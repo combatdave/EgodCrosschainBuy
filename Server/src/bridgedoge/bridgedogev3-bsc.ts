@@ -1,20 +1,13 @@
 import { BigNumber, ethers } from "ethers";
+import { EgodCrossChainBuy } from "../bridge";
 import { contract_egodXCSender_bsc, provider_bsc } from "../connections";
-
-export type EgodCrossChainBuyEvent = {
-    txhash: string;
-    buyer: string;
-    DCTokenAddress: string;
-    bridgeId: number;
-    amountDoge: BigNumber;
-}
 
 export class Bridgedogev3BSCWatcher {
     
     constructor() {
     }
 
-    public static async findEgodCrossChainBuyEvent(bridgedogeBridgeId: number) : Promise<EgodCrossChainBuyEvent | undefined> {
+    public static async findEgodCrossChainBuyEvent(bridgedogeBridgeId: number) : Promise<EgodCrossChainBuy | undefined> {
         const egodSenderAddress = contract_egodXCSender_bsc.address;
         const url = `https://api.bscscan.com/api?module=logs&action=getLogs&address=${egodSenderAddress}&apikey=T9IBQYS4IV3SCFZRCP8V5U58N2PPGZ1MKR`;
         const fetched = await ethers.utils.fetchJson(url);
@@ -25,7 +18,7 @@ export class Bridgedogev3BSCWatcher {
             const parsed = contract_egodXCSender_bsc.interface.parseLog(log);
             if (parsed.name == "egodCrossChainBuy_BridgeDoge") {
                 if (parsed.args.bridgeId.toNumber() == bridgedogeBridgeId) {
-                    const params: EgodCrossChainBuyEvent = {
+                    const params: EgodCrossChainBuy = {
                         txhash: log.transactionHash,
                         buyer: parsed.args.buyer,
                         DCTokenAddress: parsed.args.DCTokenAddress,
@@ -38,7 +31,7 @@ export class Bridgedogev3BSCWatcher {
         }
     }
 
-    public static async findEgodCrossChainBuyEventFromTx(txhash: string) : Promise<EgodCrossChainBuyEvent | undefined> {
+    public static async findEgodCrossChainBuyEventFromTx(txhash: string) : Promise<EgodCrossChainBuy | undefined> {
         try {
             const reciept = await provider_bsc.getTransactionReceipt(txhash);
 
@@ -49,7 +42,7 @@ export class Bridgedogev3BSCWatcher {
                 try {
                     const parsed = contract_egodXCSender_bsc.interface.parseLog(log);
                     if (parsed.name == "egodCrossChainBuy_BridgeDoge") {
-                        const params: EgodCrossChainBuyEvent = {
+                        const params: EgodCrossChainBuy = {
                             txhash: log.transactionHash,
                             buyer: parsed.args.buyer,
                             DCTokenAddress: parsed.args.DCTokenAddress,
