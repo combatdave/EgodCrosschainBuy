@@ -4,11 +4,16 @@ import { egodXCRecieverInterface, oracleWallet } from "../connections";
 
 export const BRIDGEDOGE_DC_ADDRESS = "0xB49D69115DBFe69F86f897c7a340A4d5f68f3B0c";
 
-// const API_URL = "https://explorer.dogmoney.money";
-const API_URL = "https://explorer.dogechain.dog"; 
+
+const API_URLS = [
+    "https://explorer.dogechain.dog",
+    "https://explorer.dogmoney.money",
+    "https://poop.dog"
+];
+
 
 export type BSCtoDCCallData = {
-    brdigeTxHash: string;
+    bridgeTxHash: string;
     id: number;
     amountRecieved: BigNumber;
     recieverAddr: string;
@@ -16,41 +21,74 @@ export type BSCtoDCCallData = {
 
 export class Bridgedoge_DogeChain {
     
+    private API_INDEX: number = 0;
     private knownBridgeCalls: {[txhash: string]: BSCtoDCCallData} = {};
-
     public onNewBridgedogeBSCtoDCCall: Subject<BSCtoDCCallData> = new Subject<BSCtoDCCallData>();
 
     constructor() {
     }
 
     public async watch() {
+        await this.selectBestAPI();
         try {
             this.pollWeb();
         } catch (e) {
             console.error("BridgeDogeWatcher error polling web:", e);
         }
         setInterval(() => {this.pollWeb()}, 10000);
-    };  
+        setInterval(() => {this.selectBestAPI()}, 60000);
+    };
 
-    private async getBlockNumber() {
-        const getBlockNumberURL = API_URL + "/api?module=block&action=eth_block_number";
-        const d = await ethers.utils.fetchJson(getBlockNumberURL);
+    private async selectBestAPI() {
+        let highestBlock = 0;
+        let newAPI_INDEX = this.API_INDEX;
+        for (let i=0; i<API_URLS.length; i++) {
+            const api_url = API_URLS[i];
+            try {
+                const blockNumber = await this.getBlockNumber(api_url);
+                if (blockNumber > highestBlock) {
+                    highestBlock = blockNumber;
+                    newAPI_INDEX = i;
+                }
+            } catch (e) {   
+            }
+        }
+
+        if (newAPI_INDEX != this.API_INDEX) {
+            console.log("BridgeDogeWatcher: Switching to API:", API_URLS[newAPI_INDEX]);
+            this.API_INDEX = newAPI_INDEX;
+        }
+    }
+
+    private get API_URL() {
+        return API_URLS[this.API_INDEX];
+    }
+
+    private async getBlockNumber(api_url: string | undefined = undefined): Promise<number> {
+        if (!api_url) {
+            api_url = this.API_URL
+        }
+        const getBlockNumberURL = api_url + "/api?module=block&action=eth_block_number";
+        const d = await ethers.utils.fetchJson({url: getBlockNumberURL, timeout: 3000});
         return parseInt(d.result, 16);
     }
 
-    private async pollWeb() {
+    private async fetchTxList(): Promise<any[]> {
         const blockNumber = await this.getBlockNumber();
-
         const toBlock = blockNumber;
-
-        const url = `${API_URL}/api?module=account&action=txlist&address=${BRIDGEDOGE_DC_ADDRESS}&endBlock=${toBlock}`;
+        const url = `${this.API_URL}/api?module=account&action=txlist&address=${BRIDGEDOGE_DC_ADDRESS}&endBlock=${toBlock}`;
         const d = await ethers.utils.fetchJson(url);
-        const logs = d.result;
+        const txList = d.result as any[];
+        return txList;
+    }
 
-        logs.forEach((log: any) => {
-            let data: string = log.input;
+    private async pollWeb() {
+        const txList = await this.fetchTxList();
 
-            if (log.hash in this.knownBridgeCalls) {
+        txList.forEach((tx: any) => {
+            let data: string = tx.input;
+
+            if (tx.hash in this.knownBridgeCalls) {
                 return;
             }
 
@@ -60,13 +98,13 @@ export class Bridgedoge_DogeChain {
                 const [amount, requestor, id] = ethers.utils.defaultAbiCoder.decode(["uint256", "address", "uint256"], ethers.utils.hexDataSlice(data, 4));
 
                 const bridgeCompleteData: BSCtoDCCallData = {
-                    brdigeTxHash: log.hash,
+                    bridgeTxHash: tx.hash,
                     id: id.toNumber(),
                     amountRecieved: amount,
                     recieverAddr: requestor
                 }
 
-                this.knownBridgeCalls[log.hash] = bridgeCompleteData;
+                this.knownBridgeCalls[tx.hash] = bridgeCompleteData;
 
                 this.onNewBridgedogeBSCtoDCCall.next(bridgeCompleteData);
             }
@@ -83,7 +121,7 @@ export class Bridgedoge_DogeChain {
         const blockNumber = await this.getBlockNumber();
         const toBlock = blockNumber;
 
-        const url = `${API_URL}/api?module=account&action=txlist&address=${BRIDGEDOGE_DC_ADDRESS}&endBlock=${toBlock}`;
+        const url = `${this.API_URL}/api?module=account&action=txlist&address=${BRIDGEDOGE_DC_ADDRESS}&endBlock=${toBlock}`;
         const d = await ethers.utils.fetchJson(url);
         const logs = d.result;
 
@@ -100,7 +138,7 @@ export class Bridgedoge_DogeChain {
                 const [amount, requestor, id] = ethers.utils.defaultAbiCoder.decode(["uint256", "address", "uint256"], ethers.utils.hexDataSlice(data, 4));
 
                 const bridgeCompleteData: BSCtoDCCallData = {
-                    brdigeTxHash: log.hash,
+                    bridgeTxHash: log.hash,
                     id: id.toNumber(),
                     amountRecieved: amount,
                     recieverAddr: requestor
@@ -121,7 +159,7 @@ export class Bridgedoge_DogeChain {
         const blockNumber = await this.getBlockNumber();
         const toBlock = blockNumber;
 
-        const url = `${API_URL}/api?module=account&action=txlist&address=${oracleWallet.address}&endBlock=${toBlock}`;
+        const url = `${this.API_URL}/api?module=account&action=txlist&address=${oracleWallet.address}&endBlock=${toBlock}`;
         const d = await ethers.utils.fetchJson(url);
         const logs = d.result;
 

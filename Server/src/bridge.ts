@@ -26,7 +26,7 @@ export const DOGECHAIN_API_BASE = "https://explorer.dogechain.dog";
 
 
 export abstract class Transmuter_Base {
-    public onPayoutDataAssembled = new Subject<PayoutData>();
+    public onNewPayoutData = new Subject<PayoutData>();
 
     constructor(public provider_src: ethers.providers.JsonRpcProvider, public provider_dogechain: ethers.providers.JsonRpcProvider) {
         
