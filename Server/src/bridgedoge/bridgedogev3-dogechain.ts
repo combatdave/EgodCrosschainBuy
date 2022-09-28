@@ -59,6 +59,7 @@ export class Bridgedoge_DogeChain {
                     amountRecieved: amount,
                     recieverAddr: requestor
                 }
+
                 this.onBridgedogeBSCtoDCCall.next(bridgeCompleteData);
             }
         });

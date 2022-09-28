@@ -98,7 +98,12 @@ export class Oracle {
         }
         const contract = await this.getRecieverForDogechainToken(eventData.DCTokenAddress);
         if (contract) {
-            return await contract.isProcessed(txhash);
+            let processed = await contract.isProcessed(txhash);
+            if (processed) {
+                return true;
+            } else {
+                return "pending";
+            }
         }
         return "Couldn't find Transmuter reciever contract for " + eventData.DCTokenAddress;
     }

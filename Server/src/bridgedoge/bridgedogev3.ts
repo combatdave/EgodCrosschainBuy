@@ -19,7 +19,7 @@ export class BridgeDogeV3 extends Transmuter_Base {
         this.dogechainWatcher.onBridgedogeBSCtoDCCall.subscribe(async (data: BridgedogeBSCtoDCParams) => {
             if (this.isEgodReciever(data.recieverAddr)) {
                 const egodEvent = await this.findEgodCrossChainBuyEvent(data.id);
-                // console.log("BridgeDoge BSCtoDC(", data.id, ") => EgodCrossChainBuyEvent:", egodEvent);
+                console.log("BridgeDoge BSCtoDC(", data.id, ") => EgodCrossChainBuyEvent:", egodEvent);
                 if (egodEvent) {
                     const payoutData: PayoutData = {
                         txhash: egodEvent.txhash,
