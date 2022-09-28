@@ -90,6 +90,7 @@ export class OneClickBuyComponent implements OnInit {
 
   public async waitForOracle() {
     try {
+      this.oracle.pokeTheOracle(this.buyTransactionHash!);
       this.oracleTransactionHash = await this.oracle.waitForOracle(this.buyTransactionHash!);
     } catch (e) {
       console.error("Oracle error:", e);

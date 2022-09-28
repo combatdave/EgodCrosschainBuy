@@ -2,25 +2,34 @@ import { ethers } from "ethers";
 import { Bridgedogev3BSCWatcher } from "./bridgedogev3-bsc";
 import { Bridgedoge_DogeChain, BSCtoDCCallData as BridgedogeBSCtoDCParams } from "./bridgedogev3-dogechain";
 import { Transmuter_Base, EgodCrossChainBuy, PayoutData } from "../bridge";
-import { contract_egodXCSender_bsc } from "../connections";
+import { contract_egodXCSender_bsc, egodXCRecieverInterface } from "../connections";
 
 export class BridgeDogeV3 extends Transmuter_Base {
 
     private dogechainWatcher: Bridgedoge_DogeChain;
-    private recievers: string[] = [];
+    private recieverAddress: string = "";
 
     constructor(public provider_src: ethers.providers.JsonRpcProvider, public provider_dogechain: ethers.providers.JsonRpcProvider) {
         super(provider_src, provider_dogechain);
 
-        this.loadRecievers();
+        this.start();
+    }
 
+    private async start() {
+        await this.loadRecieverAddress();
         this.dogechainWatcher = new Bridgedoge_DogeChain();
 
-        this.dogechainWatcher.onBridgedogeBSCtoDCCall.subscribe(async (data: BridgedogeBSCtoDCParams) => {
+        console.log("ℹ️  ====== BridgeDogeV3 Ready ======");
+        console.log("ℹ️  Sender address:", Bridgedogev3BSCWatcher.senderAddress());
+        console.log("ℹ️  Reciever address:", this.recieverAddress);
+
+        this.dogechainWatcher.onNewBridgedogeBSCtoDCCall.subscribe(async (data: BridgedogeBSCtoDCParams) => {
             if (this.isEgodReciever(data.recieverAddr)) {
+                console.log("ℹ️  New BSCtoDC to EgodXCReciever:", data.id);
                 const egodEvent = await this.findEgodCrossChainBuyEvent(data.id);
-                console.log("BridgeDoge BSCtoDC(", data.id, ") => EgodCrossChainBuyEvent:", egodEvent);
                 if (egodEvent) {
+                    console.log("     BridgeDogeV3 found EgodCrossChainBuyEvent for bridgeId:", data.id);
+                    console.log("    ", egodEvent);
                     const payoutData: PayoutData = {
                         txhash: egodEvent.txhash,
                         buyer: egodEvent.buyer,
@@ -30,21 +39,26 @@ export class BridgeDogeV3 extends Transmuter_Base {
                         dogechainBridgeTxHash: data.brdigeTxHash,
                         bridgedToken: "DOGE"
                     }
-
                     this.onPayoutDataAssembled.next(payoutData);
+                } else {
+                    console.log("     BridgeDogeV3 could not find EgodCrossChainBuyEvent for bridgeId:", data.id);
                 }
             }
         });
 
-        this.dogechainWatcher.watch();
+        await this.dogechainWatcher.watch();
     }
 
-    private async loadRecievers() {
-        this.recievers = await contract_egodXCSender_bsc.getRecievers() as string[];
+    private async loadRecieverAddress() {
+        this.recieverAddress = await contract_egodXCSender_bsc.dogechainRecieverAddress();
     }
 
-    protected isEgodReciever(address: string): boolean {
-        return this.recievers.includes(address);
+    private isEgodReciever(address: string): boolean {
+        return address.toLowerCase() === this.recieverAddress.toLowerCase();
+    }
+
+    public getRecieverContract(): ethers.Contract {
+        return new ethers.Contract(this.recieverAddress, egodXCRecieverInterface, this.provider_dogechain);
     }
 
     public async findEgodCrossChainBuyEvent(bridgeId: number) : Promise<EgodCrossChainBuy | undefined>{
@@ -60,7 +74,7 @@ export class BridgeDogeV3 extends Transmuter_Base {
     }
 
     public async manualProcessBSCTransaction(txhash: string): Promise<boolean> {
-        console.log("BridgeDogeV3 manualProcessBSCTransaction:", txhash);
+        console.log("ℹ️  BridgeDogeV3 manualProcessBSCTransaction:", txhash);
         let success = false;
         const egodEvent = await this.findEgodCrossChainBuyEventFromTx(txhash);
         if (egodEvent && egodEvent.bridgeId) {

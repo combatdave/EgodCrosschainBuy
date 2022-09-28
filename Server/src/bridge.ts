@@ -32,7 +32,7 @@ export abstract class Transmuter_Base {
         
     }
 
-    protected abstract isEgodReciever(address: string): boolean;
+    public abstract getRecieverContract(): Contract;
 
     public abstract findEgodCrossChainBuyEvent(id: any) : Promise<EgodCrossChainBuy | undefined>;
 

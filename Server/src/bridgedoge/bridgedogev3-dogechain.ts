@@ -16,7 +16,9 @@ export type BSCtoDCCallData = {
 
 export class Bridgedoge_DogeChain {
     
-    public onBridgedogeBSCtoDCCall: Subject<BSCtoDCCallData> = new Subject<BSCtoDCCallData>();
+    private knownBridgeCalls: {[txhash: string]: BSCtoDCCallData} = {};
+
+    public onNewBridgedogeBSCtoDCCall: Subject<BSCtoDCCallData> = new Subject<BSCtoDCCallData>();
 
     constructor() {
     }
@@ -48,6 +50,10 @@ export class Bridgedoge_DogeChain {
         logs.forEach((log: any) => {
             let data: string = log.input;
 
+            if (log.hash in this.knownBridgeCalls) {
+                return;
+            }
+
             const BSCtoDC = "0x12d8294c";
             if (data.toLowerCase().startsWith(BSCtoDC.toLowerCase()))
             {
@@ -60,12 +66,20 @@ export class Bridgedoge_DogeChain {
                     recieverAddr: requestor
                 }
 
-                this.onBridgedogeBSCtoDCCall.next(bridgeCompleteData);
+                this.knownBridgeCalls[log.hash] = bridgeCompleteData;
+
+                this.onNewBridgedogeBSCtoDCCall.next(bridgeCompleteData);
             }
         });
     }
 
     public async findBSCtoDCForBridgeId(bridgeId: number): Promise<BSCtoDCCallData | undefined> {
+        for (let hash in this.knownBridgeCalls) {
+            if (this.knownBridgeCalls[hash].id == bridgeId) {
+                return this.knownBridgeCalls[hash];
+            }
+        }
+
         const blockNumber = await this.getBlockNumber();
         const toBlock = blockNumber;
 
@@ -94,6 +108,7 @@ export class Bridgedoge_DogeChain {
 
                 if (bridgeCompleteData.id == bridgeId) {
                     foundData = bridgeCompleteData;
+                    this.knownBridgeCalls[log.hash] = bridgeCompleteData;
                     break;
                 }
             }

@@ -10,6 +10,10 @@ export class Bridgedogev3BSCWatcher {
     constructor() {
     }
 
+    public static senderAddress() {
+        return contract_egodXCSender_bsc.address;
+    }
+
     private static async FetchEvents() {
         const egodSenderAddress = contract_egodXCSender_bsc.address;
         const url = `https://api.bscscan.com/api?module=logs&action=getLogs&address=${egodSenderAddress}&apikey=T9IBQYS4IV3SCFZRCP8V5U58N2PPGZ1MKR`;

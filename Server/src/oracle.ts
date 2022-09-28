@@ -84,7 +84,7 @@ export class Oracle {
     }
 
     private async isPayoutProcessed(payoutData: PayoutData): Promise<boolean> {
-        const contract = await this.getRecieverForDogechainToken(payoutData.DCTokenAddress);
+        const contract = await this.getRecieverContract();
         if (contract) {
             return await contract.isProcessed(payoutData.txhash);
         }
@@ -96,7 +96,7 @@ export class Oracle {
         if (!eventData) {
             return "Couldn't find EgodCrossChainBuy event for txhash";
         }
-        const contract = await this.getRecieverForDogechainToken(eventData.DCTokenAddress);
+        const contract = await this.getRecieverContract();
         if (contract) {
             let processed = await contract.isProcessed(txhash);
             if (processed) {
@@ -113,19 +113,9 @@ export class Oracle {
         return await this.bridge.manualProcessBSCTransaction(txhash);
     }
 
-    private _cachedRecieversByTokenAddress: {[tokenAddress: string]: Contract} = {};
 
-    public async getRecieverForDogechainToken(tokenAddress: string): Promise<Contract | undefined>{
-        if (this._cachedRecieversByTokenAddress.hasOwnProperty(tokenAddress)) {
-            return this._cachedRecieversByTokenAddress[tokenAddress];
-        }
-
-        const recieverAddress = await contract_egodXCSender_bsc.getRecieverForDCTokenAddress(tokenAddress);
-        if (recieverAddress != "") {
-            const contract = getDogechainRecieverContract(recieverAddress);
-            this._cachedRecieversByTokenAddress[tokenAddress] = contract;
-            return contract;
-        }
+    public async getRecieverContract(): Promise<Contract | undefined>{
+        return this.bridge.getRecieverContract();
     }
 
     private async getOraclePayoutTransaction(bscTxHash: string): Promise<string | undefined> {

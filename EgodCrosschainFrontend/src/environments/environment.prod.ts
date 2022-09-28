@@ -1,3 +1,4 @@
 export const environment = {
-  production: true
+  production: true,
+  oracleURL: "https://egod-crosschain-oracle.herokuapp.com/"
 };

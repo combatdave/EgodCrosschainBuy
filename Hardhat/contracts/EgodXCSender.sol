@@ -8,28 +8,18 @@ import "./PancakeSwap.sol";
 import "./IBridgeDoge.sol";
 import "./ISynapseBridge.sol";
 
-struct DCRecieverData {
-    address recieverAddress;
-    bool enabled;
-}
 
 address constant BNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
 
 contract EgodXCSender is Ownable {
 
-    enum Bridge{ NONE, SELF, BRIDGEDOGE, SYNAPSE }
-    Bridge public useBridge = Bridge.BRIDGEDOGE;
-
     uint public minimumBuy = 0.1 ether;
-    bool public allEnabled = true;
+    bool public enabled = true;
     IBridgeDoge public bridgeDoge;
     IPancakeRouter02 public pancakeswap;
     IERC20 public doge;
 
-    mapping(address => DCRecieverData) public recieversByDCTokenAddress;
-    address[] public recievers;
-    mapping(address => uint256) public feeByDCTokenAddressBase1000;
-    bool public feeEnabled;
+    address public dogechainRecieverAddress;
 
     receive() external payable {}
     fallback() external payable {}
@@ -45,109 +35,42 @@ contract EgodXCSender is Ownable {
         minimumBuy = newMinimumBuy;
     }
 
-    function setRecieverForDCTokenAddress(address DCTokenAddress, address recieverAddress, bool enabled) public onlyOwner {
-        recieversByDCTokenAddress[DCTokenAddress] = DCRecieverData(recieverAddress, enabled);
-        recievers.push(recieverAddress);
+    function setReciever(address _recieverAddress) public onlyOwner {
+        dogechainRecieverAddress = _recieverAddress;
     }
 
-    function setRecieverEnabled(address DCTokenAddress, bool enabled) public onlyOwner {
-        recieversByDCTokenAddress[DCTokenAddress].enabled = enabled;
-    }
-
-    function setAllEnabled(bool enabled) public onlyOwner {
-        allEnabled = enabled;
-    }
-
-    function getRecieverForDCTokenAddress(address DCTokenAddress) public view returns (address) {
-        return recieversByDCTokenAddress[DCTokenAddress].recieverAddress;
-    }
-
-    function getRecievers() public view returns (address[] memory) {
-        return recievers;
-    }
-
-    function setFeeEnabled(bool newFeeEnabled) public onlyOwner {
-        feeEnabled = newFeeEnabled;
-    }
-
-    function setFeeForDCTokenAddress(address DCTokenAddress, uint256 feeBase1000) public onlyOwner {
-        feeByDCTokenAddressBase1000[DCTokenAddress] = feeBase1000;
+    function setAllEnabled(bool newEnabled) public onlyOwner {
+        enabled = newEnabled;
     }
 
     function doOneClickBuy(address DCTokenAddress) public payable {
-        require(allEnabled, "EgodXCSender: Disabled");
-        require(recieversByDCTokenAddress[DCTokenAddress].enabled, "EgodXCSender: No reciever.");
+        require(enabled, "EgodXCSender: Disabled");
         require(msg.value >= minimumBuy, "EgodXCSender: Minimum buy not met.");
 
         address[] memory bnb_to_doge = new address[](2);
         bnb_to_doge[0] = BNB;
         bnb_to_doge[1] = BSC_DOGE;
 
-        uint256 bnbPostFee = msg.value;
-        if (feeEnabled) {
-            bnbPostFee = bnbPostFee * (1000 - feeByDCTokenAddressBase1000[DCTokenAddress]) / 1000;
-        }
-
         uint balance_before = doge.balanceOf(address(this));
-        pancakeswap.swapExactETHForTokens{value:bnbPostFee}(
+        pancakeswap.swapExactETHForTokens{value:msg.value}(
             0,
             bnb_to_doge,
             address(this),
-            block.timestamp
+            block.timestamp + 1
         );
         uint balance_after = doge.balanceOf(address(this));
         uint amountToSend = balance_after - balance_before;
 
-        if (useBridge == Bridge.SELF) {
-            bridgeOut_Self(DCTokenAddress, amountToSend);
-        } else if (useBridge == Bridge.BRIDGEDOGE) {
-            bridgeOut_BridgeDoge(DCTokenAddress, amountToSend);
-        } else if (useBridge == Bridge.SYNAPSE) {
-            bridgeOut_Synapse(DCTokenAddress, amountToSend);
-        } else {
-            revert("EgodXCSender: Invalid bridge.");
-        }
-    }
-
-    function setCurrentBridge(Bridge newBridge) public onlyOwner {
-        useBridge = newBridge;
-    }
-
-    uint public selfFeePercent = 2;
-    function setSelfFeePercent(uint newSelfFeePercent) public onlyOwner {
-        selfFeePercent = newSelfFeePercent;
-    }
-
-    event takenFee(address indexed sender, uint256 amount);
-    event egodCrossChainBuy_Self(address indexed buyer, address indexed DCTokenAddress, uint256 amountDoge);
-    function bridgeOut_Self(address DCTokenAddress, uint256 amountToSend) internal {
-        uint fee = amountToSend * selfFeePercent / 100;
-        uint amountOut = amountToSend - fee;
-        emit takenFee(msg.sender, fee);
-        emit egodCrossChainBuy_Self(msg.sender, DCTokenAddress, amountOut);
+        bridgeOut_BridgeDoge(DCTokenAddress, amountToSend);
     }
 
     event egodCrossChainBuy_BridgeDoge(address indexed buyer, address indexed DCTokenAddress, uint indexed bridgeId, uint256 amountDoge);
     function bridgeOut_BridgeDoge(address DCTokenAddress, uint256 amountToSend) internal {
-        address dogechainRecieverAddress = recieversByDCTokenAddress[DCTokenAddress].recieverAddress;
-
         uint bridgeId = bridgeDoge.currentBridgeId(); // The correct bridge ID is the one before bc ???
         bridgeDoge.BSCToDC(dogechainRecieverAddress, amountToSend);
         IBridgeDoge.BridgeTx memory bridgeTx = bridgeDoge.readTransaction(bridgeId);
         
         emit egodCrossChainBuy_BridgeDoge(msg.sender, DCTokenAddress, bridgeId, bridgeTx.amount);
-    }
-
-    event egodCrossChainBuy_Synapse(address indexed buyer, address indexed DCTokenAddress, uint256 amountDoge);
-    function bridgeOut_Synapse(address DCTokenAddress, uint256 amountToSend) internal {
-        address dogechainRecieverAddress = recieversByDCTokenAddress[DCTokenAddress].recieverAddress;
-
-        ISynapseBridge bridge = ISynapseBridge(BSC_SYNAPSE_ADDRESS);
-        uint chainId = 2000;
-        IERC20 token = IERC20(BSC_DOGE);
-        bridge.deposit(dogechainRecieverAddress, chainId, token, amountToSend);
-        
-        emit egodCrossChainBuy_Synapse(msg.sender, DCTokenAddress, amountToSend);
     }
 
     function withdrawDoge() public onlyOwner {

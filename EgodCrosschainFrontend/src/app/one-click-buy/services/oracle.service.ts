@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
-const ORACLE_URL = "https://egod-crosschain-oracle.herokuapp.com/"
+const ORACLE_URL = environment.oracleURL; //"https://egod-crosschain-oracle.herokuapp.com/"
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,9 @@ export class OracleService {
 
   private sleepTime: number = 1000;
 
-  constructor() { }
+  constructor() {
+    console.log("Oracle URL:", ORACLE_URL);
+  }
 
   public async pokeTheOracle(bsctx: string): Promise<boolean> {
     const url = "/processtx?txhash=" + bsctx;

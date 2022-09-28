@@ -101,7 +101,7 @@ export class BSCContractService {
   }
 
   public async checkEnabled() {
-    return await this.egodXCSenderContract.allEnabled();
+    return await this.egodXCSenderContract.enabled();
   }
 
   public async doOneClickBuy(amountBNB: string, fake: boolean = false): Promise<string | undefined> {
