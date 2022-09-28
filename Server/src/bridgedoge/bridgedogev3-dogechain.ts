@@ -2,7 +2,7 @@ import {BigNumber, ethers} from "ethers";
 import { Subject } from "rxjs";
 import { egodXCRecieverInterface, oracleWallet } from "../connections";
 
-export const DOGEBRIDGE_DC_ADDRESS = "0xB49D69115DBFe69F86f897c7a340A4d5f68f3B0c";
+export const BRIDGEDOGE_DC_ADDRESS = "0xB49D69115DBFe69F86f897c7a340A4d5f68f3B0c";
 
 // const API_URL = "https://explorer.dogmoney.money";
 const API_URL = "https://explorer.dogechain.dog"; 
@@ -43,7 +43,7 @@ export class Bridgedoge_DogeChain {
 
         const toBlock = blockNumber;
 
-        const url = `${API_URL}/api?module=account&action=txlist&address=${DOGEBRIDGE_DC_ADDRESS}&endBlock=${toBlock}`;
+        const url = `${API_URL}/api?module=account&action=txlist&address=${BRIDGEDOGE_DC_ADDRESS}&endBlock=${toBlock}`;
         const d = await ethers.utils.fetchJson(url);
         const logs = d.result;
 
@@ -83,7 +83,7 @@ export class Bridgedoge_DogeChain {
         const blockNumber = await this.getBlockNumber();
         const toBlock = blockNumber;
 
-        const url = `${API_URL}/api?module=account&action=txlist&address=${DOGEBRIDGE_DC_ADDRESS}&endBlock=${toBlock}`;
+        const url = `${API_URL}/api?module=account&action=txlist&address=${BRIDGEDOGE_DC_ADDRESS}&endBlock=${toBlock}`;
         const d = await ethers.utils.fetchJson(url);
         const logs = d.result;
 
