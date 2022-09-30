@@ -35,7 +35,7 @@ export class Bridgedogev3BSCWatcher {
                     buyer: parsed.args.buyer,
                     DCTokenAddress: parsed.args.DCTokenAddress,
                     bridgeId: parsed.args.bridgeId.toNumber(),
-                    amountDoge: parsed.args.amountDoge
+                    amount: parsed.args.amountDoge
                 };
                 Bridgedogev3BSCWatcher.buyEventByBridgeId[params.bridgeId] = params;
             }
@@ -54,34 +54,6 @@ export class Bridgedogev3BSCWatcher {
         }
 
         return undefined;
-
-        // const egodSenderAddress = contract_egodXCSender_bsc.address;
-        // const url = `https://api.bscscan.com/api?module=logs&action=getLogs&address=${egodSenderAddress}&apikey=T9IBQYS4IV3SCFZRCP8V5U58N2PPGZ1MKR`;
-        // const fetched = await ethers.utils.fetchJson(url);
-        // const logs = fetched.result;
-
-        // for (let i=0; i<logs.length; i++) {
-        //     const log = logs[i];
-        //     let parsed = undefined;
-        //     try {
-        //         parsed = contract_egodXCSender_bsc.interface.parseLog(log);
-        //     } catch {
-        //         console.error("Failed to parse", log);
-        //         continue;
-        //     }
-        //     if (parsed.name == "egodCrossChainBuy_BridgeDoge") {
-        //         if (parsed.args.bridgeId.toNumber() == bridgedogeBridgeId) {
-        //             const params: EgodCrossChainBuy = {
-        //                 txhash: log.transactionHash,
-        //                 buyer: parsed.args.buyer,
-        //                 DCTokenAddress: parsed.args.DCTokenAddress,
-        //                 bridgeId: parsed.args.bridgeId.toNumber(),
-        //                 amountDoge: parsed.args.amountDoge
-        //             };
-        //             return params;
-        //         }
-        //     }
-        // }
     }
 
     public static async findEgodCrossChainBuyEventFromTx(txhash: string) : Promise<EgodCrossChainBuy | undefined> {
@@ -105,7 +77,7 @@ export class Bridgedogev3BSCWatcher {
                         buyer: parsed.args.buyer,
                         DCTokenAddress: parsed.args.DCTokenAddress,
                         bridgeId: parsed.args.bridgeId.toNumber(),
-                        amountDoge: parsed.args.amountDoge
+                        amount: parsed.args.amountDoge
                     };
                     return params;
                 }

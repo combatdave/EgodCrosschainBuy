@@ -30,11 +30,11 @@ export class BridgeDogeV3 extends Transmuter_Base {
                 if (egodEvent) {
                     console.log("     BridgeDogeV3 found EgodCrossChainBuyEvent for bridgeId", data.id, ":", egodEvent.txhash);
                     const payoutData: PayoutData = {
-                        txhash: egodEvent.txhash,
+                        src_txhash: egodEvent.txhash,
                         buyer: egodEvent.buyer,
                         egodRecieverContract: data.recieverAddr,
                         DCTokenAddress: egodEvent.DCTokenAddress,
-                        amount: egodEvent.amountDoge,
+                        amount: egodEvent.amount,
                         dogechainBridgeTxHash: data.bridgeTxHash,
                         bridgedToken: "DOGE"
                     }
@@ -49,7 +49,7 @@ export class BridgeDogeV3 extends Transmuter_Base {
     }
 
     private async loadRecieverAddress() {
-        this.recieverAddress = await contract_egodXCSender_bsc.dogechainRecieverAddress();
+        this.recieverAddress = await contract_egodXCSender_bsc.dogechainRecieverAddress_doge();
     }
 
     private isEgodReciever(address: string): boolean {
@@ -73,14 +73,14 @@ export class BridgeDogeV3 extends Transmuter_Base {
     }
 
     public async manualProcessBSCTransaction(txhash: string): Promise<boolean> {
-        console.log("ℹ️  BridgeDogeV3 manualProcessBSCTransaction:", txhash);
+        console.log("ℹ️  BridgeDogeV3 manualProcessBSCTransaction for BridgeDoge:", txhash);
         let success = false;
         const egodEvent = await this.findEgodCrossChainBuyEventFromTx(txhash);
         if (egodEvent && egodEvent.bridgeId) {
             const bscToDCData = await this.dogechainWatcher.findBSCtoDCForBridgeId(egodEvent.bridgeId);
             if (bscToDCData) {
                 const payoutData: PayoutData = {
-                    txhash: egodEvent.txhash,
+                    src_txhash: egodEvent.txhash,
                     buyer: egodEvent.buyer,
                     egodRecieverContract: bscToDCData.recieverAddr,
                     DCTokenAddress: egodEvent.DCTokenAddress,

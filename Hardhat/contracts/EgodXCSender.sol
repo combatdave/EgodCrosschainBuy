@@ -108,7 +108,7 @@ contract EgodXCSender is Ownable {
 
         ISynapseBridge bridge = ISynapseBridge(BSC_SYNAPSE_ADDRESS);
         busd.approve(BSC_SYNAPSE_ADDRESS, amountBUSD);
-        // bridge.deposit(dogechainRecieverAddress_BUSD, 2000, busd, amountBUSD);
+        bridge.deposit(dogechainRecieverAddress_BUSD, 2000, busd, amountBUSD);
         emit egodCrossChainBuy_Synapse_BUSD(msg.sender, DCTokenAddress, amountBUSD);
     }
 

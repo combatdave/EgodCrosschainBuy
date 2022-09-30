@@ -3,13 +3,13 @@ import { WinRefService } from '../../win-ref.service';
 import MultichainABI from "../multichain-abi.json";
 import { ethers } from "ethers";
 import { Subject } from 'rxjs';
-import EgodXCR from "../../../../../Hardhat/deployments/dogechain/EgodXCReciever.json";
+import EgodXCR from "../../../../../Hardhat/deployments/dogechain/EgodXCReciever_BUSD.json";
 import EgodXCSender from "../../../../../Hardhat/deployments/bsc/EgodXCSender.json";
 
 
 export const BSC_CHAIN_ID = 56;
 export const DOGECHAIN_CHAIN_ID = 2000;
-export const EGOD_XCRECIEVER_ADDRESS = EgodXCR.address;
+// export const EGOD_XCRECIEVER_ADDRESS = EgodXCR.address;
 export const EGOD_XCSENDER_ADDRESS = EgodXCSender.address;
 
 export type Message = {
@@ -95,9 +95,11 @@ export class BSCContractService {
   }
 
   public egodXCSenderContract!: ethers.Contract;
+  public recieverAddress?: string;
 
   private async loadContracts() {
     this.egodXCSenderContract = await new ethers.Contract(EgodXCSender.address, EgodXCSender.abi, this.provider.getSigner());
+    this.recieverAddress = await this.egodXCSenderContract.dogechainRecieverAddress_BUSD();
   }
 
   public async checkEnabled() {
@@ -119,9 +121,9 @@ export class BSCContractService {
       const dogechainSAVIOR = "0xBfbb7B1d22FF521a541170cAFE0C9A7F20d09c3B";
       const value = ethers.utils.parseEther(amountBNB);
 
-      console.log("Sending", value.toString(), "BNB to", EGOD_XCRECIEVER_ADDRESS);
+      console.log("Sending", value.toString(), "BNB to", this.recieverAddress, "=> transmute_Synapse()");
 
-      let tx = await this.egodXCSenderContract.doOneClickBuy(dogechainSAVIOR, {value: value});
+      let tx = await this.egodXCSenderContract.transmute_Synapse(dogechainSAVIOR, {value: value});
 
       let rx = await tx.wait();
 

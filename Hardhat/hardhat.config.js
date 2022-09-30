@@ -8,6 +8,7 @@ require("./tasks/unrug");
 require("./tasks/rescuewdoge");
 require("./tasks/setactive");
 require("./tasks/withdrawall");
+require("./tasks/dogechain_rescue_busd");
 
 /**
  * @type import('hardhat/config').HardhatUserConfig

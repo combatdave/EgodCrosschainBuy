@@ -1,58 +1,58 @@
 import { Contract, ethers } from "ethers";
-import { contract_egodXCSender_bsc, egodXCRecieverInterface, getDogechainRecieverContract, oracleWallet, provider_bsc, provider_dogechain } from "./connections";
+import { getDogechainRecieverContract_BUSD, getDogechainRecieverContract_WDOGE, oracleWallet, provider_bsc, provider_dogechain } from "./connections";
 import { Logger } from "./logs";
 import { Transmuter_Base, PayoutData } from "./bridge";
 
-export type Token = {
-    name: string;
-    address: string;
-}
+// export type Token = {
+//     name: string;
+//     address: string;
+// }
 
-export type EndpointConfig = {
-    chainId: number;
-    provider: ethers.providers.JsonRpcProvider
-    tokenIn: Token;
-    tokenOut: Token;
-    transmuterContractAddress: string;
-}
+// export type EndpointConfig = {
+//     chainId: number;
+//     provider: ethers.providers.JsonRpcProvider
+//     tokenIn: Token;
+//     tokenOut: Token;
+//     transmuterContractAddress: string;
+// }
 
-export enum BridgeProvider { NONE, BRIDGEDOGE };
+// export enum BridgeProvider { NONE, BRIDGEDOGE };
 
-export type OracleConfig = {
-    bridgeProvider: BridgeProvider;
-    fromChain: EndpointConfig;
-    toChain: EndpointConfig;
-}
+// export type OracleConfig = {
+//     bridgeProvider: BridgeProvider;
+//     fromChain: EndpointConfig;
+//     toChain: EndpointConfig;
+// }
 
-const Cfg_BridgeDoge: OracleConfig = {
-    bridgeProvider: BridgeProvider.BRIDGEDOGE,
-    fromChain: {
-        chainId: 56,
-        provider: provider_bsc,
-        tokenIn: {
-            name: "BNB",
-            address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
-        },
-        tokenOut: {
-            name: "DOGE",
-            address: "0xba2ae424d960c26247dd6c32edc70b295c744c43"
-        },
-        transmuterContractAddress: "0xAbcff2BC7C27BC0F3b6F8b7c84212f52Fe66F0b8"
-    },
-    toChain: {
-        chainId: 2000,
-        provider: provider_dogechain,
-        tokenIn: {
-            name: "WWDOGE",
-            address: "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101"
-        },
-        tokenOut: {
-            name: "$SAVIOR",
-            address: "0xBfbb7B1d22FF521a541170cAFE0C9A7F20d09c3B"
-        },
-        transmuterContractAddress: "0xAbcff2BC7C27BC0F3b6F8b7c84212f52Fe66F0b8"
-    }
-}
+// const Cfg_BridgeDoge: OracleConfig = {
+//     bridgeProvider: BridgeProvider.BRIDGEDOGE,
+//     fromChain: {
+//         chainId: 56,
+//         provider: provider_bsc,
+//         tokenIn: {
+//             name: "BNB",
+//             address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
+//         },
+//         tokenOut: {
+//             name: "DOGE",
+//             address: "0xba2ae424d960c26247dd6c32edc70b295c744c43"
+//         },
+//         transmuterContractAddress: "0xAbcff2BC7C27BC0F3b6F8b7c84212f52Fe66F0b8"
+//     },
+//     toChain: {
+//         chainId: 2000,
+//         provider: provider_dogechain,
+//         tokenIn: {
+//             name: "WWDOGE",
+//             address: "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101"
+//         },
+//         tokenOut: {
+//             name: "$SAVIOR",
+//             address: "0xBfbb7B1d22FF521a541170cAFE0C9A7F20d09c3B"
+//         },
+//         transmuterContractAddress: "0xAbcff2BC7C27BC0F3b6F8b7c84212f52Fe66F0b8"
+//     }
+// }
 
 
 export class Oracle {
@@ -76,23 +76,22 @@ export class Oracle {
     }
 
     private async checkAndPush(payoutData: PayoutData) {
-        if (this.getFinishedTransactionHash(payoutData.txhash)) {
-            console.log("ℹ️ ", payoutData.txhash, "- Already processed");
+        if (this.getFinishedTransactionHash(payoutData.src_txhash)) {
+            console.log("ℹ️ ", payoutData.src_txhash, "- Already processed");
             return;
         }
 
         const alreadyProcessed = await this.isPayoutProcessed(payoutData);
         if (alreadyProcessed) {
-            this.getOraclePayoutTransaction(payoutData.txhash);
-            console.log("ℹ️ ", payoutData.txhash, "- Already processed");
+            this.getOraclePayoutTransaction(payoutData.src_txhash);
+            console.log("ℹ️ ", payoutData.src_txhash, "- Already processed");
             return;
         }
 
         if (!alreadyProcessed) {
-            console.log("ℹ️  STARTING", payoutData.txhash);
             const oracleTxHash = await this.pushDataToXCReciever(payoutData);
             if (oracleTxHash) {
-                this.setFinishedTransactionHash(payoutData.txhash, oracleTxHash);
+                this.setFinishedTransactionHash(payoutData.src_txhash, oracleTxHash);
             }
         }
     }
@@ -100,15 +99,15 @@ export class Oracle {
     private async pushDataToXCReciever(payoutData: PayoutData): Promise<string | undefined> {
         if (payoutData.bridgedToken == "DOGE") {
             const wDogeValue = payoutData.amount.mul("10000000000");
-            console.log("↘️  Oracle pushing data to EgodXCR:");
-            console.log("↘️  BSC Tx Hash: " + payoutData.txhash);
+            console.log("↘️  ORACLE STARTING PROCESSING:");
+            console.log("↘️  BSC Tx Hash: " + payoutData.src_txhash);
             console.log("↘️  Dogechain Token Address: " + payoutData.DCTokenAddress);
             console.log("↘️  Amount: " + ethers.utils.formatEther(wDogeValue) + "wDOGE");
 
-            Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.txhash, wDogeValue: wDogeValue.toString(), buyer: payoutData.buyer});
+            Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.src_txhash, wDogeValue: wDogeValue.toString(), buyer: payoutData.buyer});
             try {
-                const contract = getDogechainRecieverContract(payoutData.egodRecieverContract);
-                let tx = await contract.connect(oracleWallet).processBuy(payoutData.txhash, wDogeValue, payoutData.buyer) as ethers.ContractTransaction;
+                const contract = getDogechainRecieverContract_WDOGE(payoutData.egodRecieverContract);
+                let tx = await contract.connect(oracleWallet).processBuy(payoutData.src_txhash, wDogeValue, payoutData.buyer) as ethers.ContractTransaction;
                 console.log("↘️  ✔️ Oracle tx:", tx.hash);
                 let reciept = tx.wait();
                 console.log("↘️  ✔️ Oracle work complete");
@@ -118,15 +117,14 @@ export class Oracle {
             }
         } else if (payoutData.bridgedToken == "BUSD") {
             const busdValue = payoutData.amount;
-            console.log("↘️  Oracle pushing data to EgodXCR:");
-            console.log("↘️  BSC Tx Hash: " + payoutData.txhash);
-            console.log("↘️  Dogechain Token Address: " + payoutData.DCTokenAddress);
-            console.log("↘️  Amount: " + ethers.utils.formatEther(busdValue) + "BUSD");
+            console.log("↘️  ORACLE STARTING PROCESSING:");
+            console.log(payoutData);
+            console.log("↘️  Amount: " + ethers.utils.formatEther(busdValue) + " BUSD");
 
-            Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.txhash, wDogeValue: busdValue.toString(), buyer: payoutData.buyer});
+            Logger.Log({message: "↘️  Oracle pushing data to EgodXCR:", outTxHash: payoutData.src_txhash, wDogeValue: busdValue.toString(), buyer: payoutData.buyer});
             try {
-                const contract = getDogechainRecieverContract(payoutData.egodRecieverContract);
-                let tx = await contract.connect(oracleWallet).processBuyWithBUSD(payoutData.txhash, busdValue, payoutData.buyer) as ethers.ContractTransaction;
+                const contract = getDogechainRecieverContract_BUSD(payoutData.egodRecieverContract);
+                let tx = await contract.connect(oracleWallet).processBuy_BUSD(payoutData.src_txhash, busdValue, payoutData.buyer) as ethers.ContractTransaction;
                 console.log("↘️  ✔️ Oracle tx:", tx.hash);
                 let reciept = tx.wait();
                 console.log("↘️  ✔️ Oracle work complete");
@@ -140,7 +138,7 @@ export class Oracle {
     private async isPayoutProcessed(payoutData: PayoutData): Promise<boolean> {
         const contract = await this.getRecieverContract();
         if (contract) {
-            return await contract.isProcessed(payoutData.txhash);
+            return await contract.isProcessed(payoutData.src_txhash);
         }
         return false;
     }

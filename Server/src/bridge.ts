@@ -5,7 +5,7 @@ import { contract_egodXCSender_bsc, oracleWallet } from "./connections";
 export type BridgeToken = "DOGE" | "BUSD";
 
 export type PayoutData = {
-    txhash: string;
+    src_txhash: string;
     buyer: string;
     egodRecieverContract: string;
     DCTokenAddress: string;
@@ -18,7 +18,7 @@ export type EgodCrossChainBuy = {
     txhash: string;
     buyer: string;
     DCTokenAddress: string;
-    amountDoge: BigNumber;
+    amount: BigNumber;
     bridgeId?: any;
 }
 

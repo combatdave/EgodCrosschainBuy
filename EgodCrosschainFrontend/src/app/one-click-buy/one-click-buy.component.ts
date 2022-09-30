@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@an
 import { BigNumber, ethers } from 'ethers';
 import { fetchJson } from 'ethers/lib/utils';
 import { ErrorMessageService } from '../error-message-renderer/error-message.service';
-import { BSCContractService, EGOD_XCRECIEVER_ADDRESS, EGOD_XCSENDER_ADDRESS } from './services/bsccontract.service';
+import { BSCContractService, EGOD_XCSENDER_ADDRESS } from './services/bsccontract.service';
 import { BSCTransactionFinderService, HistoricalTransaction } from './services/bsctransaction-finder.service';
 import { JoinDogechainService } from './services/join-dogechain.service';
 import { OracleService } from './services/oracle.service';
@@ -165,7 +165,10 @@ export class OneClickBuyComponent implements OnInit {
   }
 
   public get EgodXCRecieverAddress(): string {
-    return EGOD_XCRECIEVER_ADDRESS;
+    if (this.bscContract.recieverAddress) {
+      return this.bscContract.recieverAddress!;
+    }
+    return "Loading...";
   }
 
   public shortAddress(address: string): string {
