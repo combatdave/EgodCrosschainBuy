@@ -9,13 +9,11 @@ module.exports = async({ getNamedAccounts, deployments, getChainId }) => {
         return;
     }
 
-    const recieverContractName = "TransmuterReciever_BUSD_SAVIOR";
-
-    let deployment = await deploy(recieverContractName, {
+    let deployment = await deploy('EgodXCReciever_Doge', {
         from: deployer,
         log: true,
     });
 
-    console.log("Deployed", recieverContractName, "to", deployment.address);
+    console.log("Deployed EgodXCReciever_Doge to", deployment.address);
 };
-module.exports.tags = ['Transmuter_Synapse_Dogechain'];
+module.exports.tags = ['EgodXCReciever_Doge'];

@@ -5,11 +5,13 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 import "./DogeSwap.sol";
+import "./Kibbleswap.sol";
 
+address constant BUSD_ADDR = 0x332730a4F6E03D9C55829435f10360E13cfA41Ff;
 address constant WDOGE = 0xB7ddC6414bf4F5515b52D8BdD69973Ae205ff101;
 address constant EGOD = 0xBfbb7B1d22FF521a541170cAFE0C9A7F20d09c3B;
 
-contract EgodXCReciever is Ownable {
+contract EgodXCReciever_BUSD is Ownable {
 
     mapping(bytes32 => bool) public proccessedTransactions;
     address public oracle;
@@ -36,10 +38,40 @@ contract EgodXCReciever is Ownable {
 
     event buyComplete(bytes32 indexed txHash, uint indexed amountWDOGE, address indexed reciever, uint amountSAVIOR);
 
-    function processBuy(bytes32 txHash, uint amountWDOGE, address reciever) public onlyOracle {
+    function processBuy_BUSD(bytes32 txHash, uint amountBUSD, address reciever) public onlyOracle {
         require(!proccessedTransactions[txHash], "Transaction already proccessed");
         proccessedTransactions[txHash] = true;
 
+        uint amountWDOGE = BUSDtoWDOGE(amountBUSD);
+        uint amountSAVIOR = WDOGEtoSAVIOR(amountWDOGE, reciever);
+
+        emit buyComplete(txHash, amountWDOGE, reciever, amountSAVIOR);
+    }
+
+    function BUSDtoWDOGE(uint amountBUSD) internal returns (uint256 amountWDOGE) {
+        IKibbleswapRouter router = IKibbleswapRouter(KIBBLESWAP_ROUTER_ADDRESS);
+        IERC20 busd = IERC20(BUSD_ADDR);
+        busd.approve(address(router), amountBUSD);
+
+        address[] memory busd_to_wdoge = new address[](2);
+        busd_to_wdoge[0] = BUSD_ADDR;
+        busd_to_wdoge[1] = WDOGE;
+
+        uint256 wdogeBefore = address(this).balance;
+        router.swapExactTokensForETH(
+            amountBUSD,
+            0,
+            busd_to_wdoge,
+            address(this),
+            block.timestamp
+        );
+        uint256 wdogeAfter = address(this).balance;
+
+        amountWDOGE = wdogeAfter - wdogeBefore;
+        return amountWDOGE;
+    }
+
+    function WDOGEtoSAVIOR(uint amountWDOGE, address reciever) internal returns (uint256 amountSAVIOR) {
         address[] memory wdoge_to_egod = new address[](2);
         wdoge_to_egod[0] = WDOGE;
         wdoge_to_egod[1] = address(egod);
@@ -53,7 +85,8 @@ contract EgodXCReciever is Ownable {
         );
         uint saviorAfter = egod.balanceOf(reciever);
 
-        emit buyComplete(txHash, amountWDOGE, reciever, saviorAfter - saviorBefore);
+        amountSAVIOR = saviorAfter - saviorBefore;
+        return amountSAVIOR;
     }
 
     function isProcessed(bytes32 txHash) public view returns (bool processed) {

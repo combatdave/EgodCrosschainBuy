@@ -1,14 +1,17 @@
 #!/bin/bash
 npx hardhat compile
 
-npx hardhat --network dogechain deploy --tags EgodXCReciever && npx hardhat --network bsc deploy --tags EgodXCSender
-echo Deployment complete
+npx hardhat --network dogechain deploy --tags EgodXCReciever_Doge
+npx hardhat --network dogechain deploy --tags EgodXCReciever_BUSD
+npx hardhat --network bsc deploy --tags EgodXCSender
+echo DEPLOYMENT complete
+echo
+
 
 cp deployments/bsc/EgodXCSender.json ../Server/src/deployments/bsc/EgodXCSender.json
-echo Copied EgodXCSender deployment from Hardhat to Server
-
-cp deployments/dogechain/EgodXCReciever.json ../Server/src/deployments/dogechain/EgodXCReciever.json
-echo Copied EgodXCReciever deployment from Hardhat to Server
+cp deployments/dogechain/EgodXCReciever_Doge.json ../Server/src/deployments/dogechain/EgodXCReciever_Doge.json
+cp deployments/dogechain/EgodXCReciever_BUSD.json ../Server/src/deployments/dogechain/EgodXCReciever_BUSD.json
+echo COPIED DEPLOYMENTS
 
 echo
 echo FINISHED!

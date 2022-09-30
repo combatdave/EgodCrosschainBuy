@@ -9,11 +9,11 @@ module.exports = async({ getNamedAccounts, deployments, getChainId }) => {
         return;
     }
 
-    let deployment = await deploy('EgodXCReciever', {
+    let deployment = await deploy('EgodXCReciever_BUSD', {
         from: deployer,
         log: true,
     });
 
-    console.log("Deployed EgodXCReciever to", deployment.address);
+    console.log("Deployed EgodXCReciever_BUSD to", deployment.address);
 };
-module.exports.tags = ['EgodXCReciever'];
+module.exports.tags = ['EgodXCReciever_BUSD'];

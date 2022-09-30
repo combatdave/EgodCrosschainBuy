@@ -18,9 +18,18 @@ module.exports = async({ getNamedAccounts, deployments, getChainId }) => {
 
     let sender = await ethers.getContractAt('EgodXCSender', deployment.address);
 
-    const dogechainRecieverDeployment = require("../deployments/dogechain/EgodXCReciever.json");
-    let addRecieverTx = await sender.setReciever(dogechainRecieverDeployment.address);
+    try {
+        const deployment_reciever_doge = require("../deployments/dogechain/EgodXCReciever_Doge.json");
+        await sender.setReciever_Doge(deployment_reciever_doge.address);
+    } catch {
+        console.error("No reciever for DOGE");
+    }
 
-    console.log("Added reciever for Dogechain Egod token:", addRecieverTx.hash);
+    try {
+        const deployment_reciever_BUSD = require("../deployments/dogechain/EgodXCReciever_BUSD.json");
+        await sender.setReciever_BUSD(deployment_reciever_BUSD.address);
+    } catch {
+        console.error("No reciever for BUSD");
+    }
 };
 module.exports.tags = ['EgodXCSender'];
